@@ -282,38 +282,11 @@
       </a-entity>
     </a-scene>
 
-    <!-- Карусель превью моделей -->
-    <div class="preview-carousel">
-      <div class="preview-item" data-model="model1.glb">
-        <a-scene class="preview-scene" embedded vr-mode-ui="enabled: false">
-          <a-assets>
-            <a-asset-item id="previewModel1" src="model1.glb"></a-asset-item>
-          </a-assets>
-          <a-entity 
-            gltf-model="#previewModel1"
-            position="0 0 0"
-            rotation="0 0 0"
-            animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear"
-            fit-preview
-          ></a-entity>
-          <a-camera position="0 0 3"></a-camera>
-        </a-scene>
-      </div>
-      <div class="preview-item" data-model="model2.glb">
-        <a-scene class="preview-scene" embedded vr-mode-ui="enabled: false">
-          <a-assets>
-            <a-asset-item id="previewModel2" src="model2.glb"></a-asset-item>
-          </a-assets>
-          <a-entity 
-            gltf-model="#previewModel2"
-            position="0 0 0"
-            rotation="0 0 0"
-            animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear"
-            fit-preview
-          ></a-entity>
-          <a-camera position="0 0 3"></a-camera>
-        </a-scene>
-      </div>
+    <!-- Кнопки для переключения моделей -->
+    <div id="model-switcher" style="position: fixed; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000;">
+      <img id="btn-left" src="l.png" alt="Влево" style="width: 48px; height: 48px; margin: 0 20px; cursor: pointer; opacity: 0.85;">
+      <span id="model-label" style="color: white; font-size: 20px; min-width: 80px; text-align: center;"></span>
+      <img id="btn-right" src="r.png" alt="Вправо" style="width: 48px; height: 48px; margin: 0 20px; cursor: pointer; opacity: 0.85;">
     </div>
 
     <script>
@@ -579,67 +552,28 @@
         }
       });
 
-      // Компонент для автоматического масштабирования модели в превью
-      AFRAME.registerComponent('fit-preview', {
-        init: function () {
-          this.el.addEventListener('model-loaded', () => {
-            const bbox = new THREE.Box3().setFromObject(this.el.object3D);
-            const size = bbox.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const scaleFactor = 1 / maxDim;
-            this.el.setAttribute('scale', `${scaleFactor} ${scaleFactor} ${scaleFactor}`);
-            
-            // Центрируем модель
-            const center = bbox.getCenter(new THREE.Vector3());
-            this.el.object3D.position.sub(center);
-          });
-        }
-      });
+      // Переключение моделей по кнопкам
+      const models = [
+        { path: 'model.glb', label: 'Стул' },
+        { path: 'cat.glb', label: 'Кот' }
+      ];
+      let currentIndex = 0; // по умолчанию стул
 
-      // Обработчик клика по превью
-      document.querySelectorAll('.preview-item').forEach(item => {
-        item.addEventListener('click', () => {
-          // Убираем активный класс у всех превью
-          document.querySelectorAll('.preview-item').forEach(i => i.classList.remove('active'));
-          // Добавляем активный класс выбранному превью
-          item.classList.add('active');
-          
-          // Получаем путь к модели
-          const modelPath = item.getAttribute('data-model');
-          // Меняем модель в AR-сцене
-          switchModel(modelPath);
-        });
-      });
-
-      // Swipe obsługa dla karuzeli modeli
-      let startX = 0;
-      const carousel = document.querySelector('.preview-carousel');
-      if (carousel) {
-        carousel.addEventListener('touchstart', (e) => {
-          startX = e.touches[0].clientX;
-        });
-        carousel.addEventListener('touchend', (e) => {
-          const endX = e.changedTouches[0].clientX;
-          const diff = startX - endX;
-          if (Math.abs(diff) > 50) {
-            const items = Array.from(document.querySelectorAll('.preview-item'));
-            const activeIndex = items.findIndex(i => i.classList.contains('active'));
-            let newIndex = activeIndex;
-            if (diff > 0) {
-              // Swipe w lewo -> następny model
-              newIndex = Math.min(items.length - 1, activeIndex + 1);
-            } else {
-              // Swipe w prawo -> poprzedni model
-              newIndex = Math.max(0, activeIndex - 1);
-            }
-            if (newIndex !== activeIndex) {
-              items[activeIndex].classList.remove('active');
-              items[newIndex].classList.add('active');
-              switchModel(items[newIndex].dataset.model);
-            }
-          }
-        });
+      function updateModel() {
+        switchModel(models[currentIndex].path);
+        document.getElementById('model-label').textContent = models[currentIndex].label;
       }
+
+      document.getElementById('btn-left').onclick = () => {
+        currentIndex = (currentIndex - 1 + models.length) % models.length;
+        updateModel();
+      };
+      document.getElementById('btn-right').onclick = () => {
+        currentIndex = (currentIndex + 1) % models.length;
+        updateModel();
+      };
+
+      document.addEventListener('DOMContentLoaded', updateModel);
     </script>
   </body>
 </html>
