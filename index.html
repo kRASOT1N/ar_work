@@ -12,6 +12,7 @@
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
     
     <!-- Skrypt do wyłączania okien dialogowych AR.js -->
     <script>
@@ -230,58 +231,51 @@
     </a-scene>
 
     <!-- Karuzela modeli -->
-    <div id="carousel" style="position: fixed; bottom: 10px; width: 100%; display: flex; justify-content: center; gap: 10px; z-index: 10;">
-      <div style="width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border-radius: 8px; overflow: hidden;">
-        <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; logarithmicDepthBuffer: true;" style="width: 100%; height: 100%;">
-          <a-assets>
-            <a-mixin id="spin-preview" animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear;"></a-mixin>
-          </a-assets>
-          
-          <a-entity 
-            gltf-model="models/cat.glb"
-            position="0 0 0"
-            scale="0.5 0.5 0.5"
-            mixin="spin-preview"
-          ></a-entity>
-          
-          <a-camera position="0 0 2.5"></a-camera>
-        </a-scene>
-      </div>
-      <div style="width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border-radius: 8px; overflow: hidden;">
-        <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; logarithmicDepthBuffer: true;" style="width: 100%; height: 100%;">
-          <a-assets>
-            <a-mixin id="spin-preview" animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear;"></a-mixin>
-          </a-assets>
-          
-          <a-entity 
-            gltf-model="models/dog.glb"
-            position="0 0 0"
-            scale="0.5 0.5 0.5"
-            mixin="spin-preview"
-          ></a-entity>
-          
-          <a-camera position="0 0 2.5"></a-camera>
-        </a-scene>
-      </div>
-      <div style="width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border-radius: 8px; overflow: hidden;">
-        <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; logarithmicDepthBuffer: true;" style="width: 100%; height: 100%;">
-          <a-assets>
-            <a-mixin id="spin-preview" animation="property: rotation; to: 0 360 0; loop: true; dur: 5000; easing: linear;"></a-mixin>
-          </a-assets>
-          
-          <a-entity 
-            gltf-model="models/rabbit.glb"
-            position="0 0 0"
-            scale="0.5 0.5 0.5"
-            mixin="spin-preview"
-          ></a-entity>
-          
-          <a-camera position="0 0 2.5"></a-camera>
-        </a-scene>
+    <div class="carousel-container">
+      <div class="carousel">
+        <div class="carousel-item active" data-model="models/cat.glb" data-usdz="models/cat.usdz">
+          <div class="model-display">
+            <a-entity 
+              id="preview-cat"
+              gltf-model="models/cat.usdz" 
+              position="0 -0.2 -1.5" 
+              rotation="0 -45 0" 
+              scale="0.8 0.8 0.8"
+            ></a-entity>
+          </div>
+        </div>
+        <div class="carousel-item" data-model="models/model.glb" data-usdz="models/model.usdz">
+          <div class="model-display">
+            <a-entity 
+              id="preview-chair"
+              gltf-model="models/model.usdz" 
+              position="0 -0.2 -1.5" 
+              rotation="0 -45 0" 
+              scale="0.8 0.8 0.8"
+            ></a-entity>
+          </div>
+        </div>
       </div>
     </div>
 
     <script>
+      // Komponent do automatycznego skalowania modelu w podglądzie
+      AFRAME.registerComponent('fit-preview', {
+        init: function () {
+          this.el.addEventListener('model-loaded', () => {
+            const bbox = new THREE.Box3().setFromObject(this.el.object3D);
+            const size = bbox.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scaleFactor = 1 / maxDim;
+            this.el.setAttribute('scale', `${scaleFactor} ${scaleFactor} ${scaleFactor}`);
+            
+            // Centrujemy model
+            const center = bbox.getCenter(new THREE.Vector3());
+            this.el.object3D.position.sub(center);
+          });
+        }
+      });
+
       // Rejestrujemy komponent do obsługi kliknięć
       AFRAME.registerComponent('clickable', {
         init: function() {
