@@ -385,9 +385,16 @@
               // Zmieniamy model
               switchModel(item.dataset.model);
               
-              // Aktualizujemy podpowiedź
-              arHint.textContent = 'Skieruj kamerę na marker Hiro';
-              arHint.classList.remove('hidden');
+              // Sprawdzamy, czy marker jest już wykryty
+              const hiroMarker = document.querySelector('#hiro-marker');
+              if (hiroMarker && hiroMarker.object3D.visible) {
+                // Jeśli marker jest widoczny, ukrywamy podpowiedź
+                arHint.classList.add('hidden');
+              } else {
+                // Jeśli marker nie jest widoczny, pokazujemy podpowiedź
+                arHint.textContent = 'Skieruj kamerę na marker Hiro';
+                arHint.classList.remove('hidden');
+              }
             });
           });
           
