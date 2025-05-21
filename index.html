@@ -12,7 +12,6 @@
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
     
     <!-- Skrypt do wyłączania okien dialogowych AR.js -->
     <script>
@@ -150,6 +149,59 @@
       .a-enter-vr {
         display: none !important;
       }
+
+      /* Существующие стили */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        color: white;
+        font-size: 24px;
+      }
+
+      /* Стили для карусели превью */
+      .preview-carousel {
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        z-index: 1000;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      .preview-item {
+        width: 100px;
+        height: 100px;
+        border: 2px solid white;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .preview-item:hover {
+        transform: scale(1.05);
+      }
+
+      .preview-item.active {
+        border-color: #4CAF50;
+      }
+
+      .preview-scene {
+        width: 100%;
+        height: 100%;
+      }
     </style>
   </head>
   <body>
@@ -258,24 +310,41 @@
       </div>
     </div>
 
-    <script>
-      // Komponent do automatycznego skalowania modelu w podglądzie
-      AFRAME.registerComponent('fit-preview', {
-        init: function () {
-          this.el.addEventListener('model-loaded', () => {
-            const bbox = new THREE.Box3().setFromObject(this.el.object3D);
-            const size = bbox.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const scaleFactor = 1 / maxDim;
-            this.el.setAttribute('scale', `${scaleFactor} ${scaleFactor} ${scaleFactor}`);
-            
-            // Centrujemy model
-            const center = bbox.getCenter(new THREE.Vector3());
-            this.el.object3D.position.sub(center);
-          });
-        }
-      });
+    <!-- Карусель превью моделей -->
+    <div class="preview-carousel">
+      <div class="preview-item" data-model="model1.glb">
+        <a-scene class="preview-scene" embedded vr-mode-ui="enabled: false">
+          <a-assets>
+            <a-asset-item id="previewModel1" src="model1.glb"></a-asset-item>
+          </a-assets>
+          <a-entity 
+            gltf-model="#previewModel1"
+            position="0 0 0"
+            rotation="0 0 0"
+            animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear"
+            fit-preview
+          ></a-entity>
+          <a-camera position="0 0 3"></a-camera>
+        </a-scene>
+      </div>
+      <div class="preview-item" data-model="model2.glb">
+        <a-scene class="preview-scene" embedded vr-mode-ui="enabled: false">
+          <a-assets>
+            <a-asset-item id="previewModel2" src="model2.glb"></a-asset-item>
+          </a-assets>
+          <a-entity 
+            gltf-model="#previewModel2"
+            position="0 0 0"
+            rotation="0 0 0"
+            animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear"
+            fit-preview
+          ></a-entity>
+          <a-camera position="0 0 3"></a-camera>
+        </a-scene>
+      </div>
+    </div>
 
+    <script>
       // Rejestrujemy komponent do obsługi kliknięć
       AFRAME.registerComponent('clickable', {
         init: function() {
@@ -536,6 +605,38 @@
           arHint.textContent = 'Błąd inicjalizacji: ' + error.message;
           hideLoading();
         }
+      });
+
+      // Компонент для автоматического масштабирования модели в превью
+      AFRAME.registerComponent('fit-preview', {
+        init: function () {
+          this.el.addEventListener('model-loaded', () => {
+            const bbox = new THREE.Box3().setFromObject(this.el.object3D);
+            const size = bbox.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scaleFactor = 1 / maxDim;
+            this.el.setAttribute('scale', `${scaleFactor} ${scaleFactor} ${scaleFactor}`);
+            
+            // Центрируем модель
+            const center = bbox.getCenter(new THREE.Vector3());
+            this.el.object3D.position.sub(center);
+          });
+        }
+      });
+
+      // Обработчик клика по превью
+      document.querySelectorAll('.preview-item').forEach(item => {
+        item.addEventListener('click', () => {
+          // Убираем активный класс у всех превью
+          document.querySelectorAll('.preview-item').forEach(i => i.classList.remove('active'));
+          // Добавляем активный класс выбранному превью
+          item.classList.add('active');
+          
+          // Получаем путь к модели
+          const modelPath = item.getAttribute('data-model');
+          // Меняем модель в AR-сцене
+          switchModel(modelPath);
+        });
       });
     </script>
   </body>
