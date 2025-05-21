@@ -116,7 +116,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        color: black;
+        color: white;
         font-size: 18px;
         z-index: 2000;
       }
@@ -158,7 +158,7 @@
     <!-- A-Frame сцена -->
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; sourceWidth: 1280; sourceHeight: 720; canvasWidth: 1280; canvasHeight: 720; displayWidth: 1280; displayHeight: 720;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
     >
@@ -167,6 +167,11 @@
         <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
     
+      <!-- Тестовый маркер Hiro для проверки -->
+      <a-marker preset="hiro">
+        <a-box position="0 0.5 0" color="red"></a-box>
+      </a-marker>
+
       <!-- QR-код маркер -->
       <a-marker id="qr-marker" type="barcode" value="7">
         <!-- Контейнер для модели с вращением -->
@@ -270,19 +275,20 @@
         // Обработка QR-маркера
         const qrMarker = document.querySelector('#qr-marker');
         
-        qrMarker.addEventListener('markerFound', () => {
-          console.log('QR-маркер обнаружен!');
-          arHint.classList.add('hidden');
-        });
-        
-        qrMarker.addEventListener('markerLost', () => {
-          console.log('QR-маркер потерян');
-          // Показываем подсказку только если модель уже выбрана
-          if (isModelSelected) {
-            arHint.textContent = 'Наведите камеру на QR-код';
-            arHint.classList.remove('hidden');
-          }
-        });
+        if (qrMarker) {
+          qrMarker.addEventListener('markerFound', () => {
+            console.log('QR-маркер обнаружен!');
+            if (arHint) arHint.classList.add('hidden');
+          });
+          
+          qrMarker.addEventListener('markerLost', () => {
+            console.log('QR-маркер потерян');
+            if (arHint && isModelSelected) {
+              arHint.textContent = 'Наведите камеру на QR-код';
+              arHint.classList.remove('hidden');
+            }
+          });
+        }
 
         // Обработка выбора модели в карусели
         carouselItems.forEach(item => {
@@ -314,8 +320,10 @@
               isModelSelected = true;
               
               // Обновляем подсказку
-              arHint.textContent = 'Наведите камеру на QR-код';
-              arHint.classList.remove('hidden');
+              if (arHint) {
+                arHint.textContent = 'Наведите камеру на QR-код';
+                arHint.classList.remove('hidden');
+              }
             }
           });
         });
@@ -323,7 +331,7 @@
         // Скрываем загрузочный экран после инициализации
         window.addEventListener('load', function() {
           setTimeout(() => {
-            loading.classList.add('hidden');
+            if (loading) loading.classList.add('hidden');
           }, 2000);
         });
       });
