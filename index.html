@@ -49,107 +49,6 @@
         overflow: hidden;
       }
 
-      .carousel-container {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 95%;
-        max-width: 600px;
-        z-index: 1000;
-      }
-
-      .carousel {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: rgba(0, 0, 0, 0.7);
-        border-radius: 15px;
-        padding: 10px;
-        width: 100%;
-        max-width: 500px;
-        overflow: hidden;
-      }
-
-      .carousel-item {
-        flex: 0 0 auto;
-        width: 100px;
-        height: 100px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid transparent;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 0 15px;
-        position: relative;
-      }
-
-      .model-display {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-      }
-
-      .carousel-item:hover {
-        transform: scale(1.05);
-      }
-
-      .carousel-item.active {
-        border-color: #007AFF;
-      }
-
-      .loading {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        font-size: 18px;
-        z-index: 2000;
-      }
-
-      .loading.hidden {
-        display: none;
-      }
-
-      .ar-hint {
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 15px 25px;
-        border-radius: 10px;
-        text-align: center;
-        z-index: 1000;
-        font-size: 16px;
-        transition: opacity 0.3s ease;
-      }
-
-      .ar-hint.hidden {
-        opacity: 0;
-        pointer-events: none;
-      }
-
-      /* Ukrywamy standardowy interfejs AR.js */
-      .a-enter-vr {
-        display: none !important;
-      }
-
       #loading-screen {
         position: fixed;
         top: 0;
@@ -188,13 +87,20 @@
         display: none;
       }
 
-      .nav-button {
+      .model-nav-buttons {
         position: fixed;
         bottom: 20px;
-        width: 50px;
-        height: 50px;
-        cursor: pointer;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 1000;
+        display: flex;
+        gap: 30px;
+      }
+
+      .nav-button {
+        width: 60px;
+        height: 60px;
+        cursor: pointer;
         transition: transform 0.2s;
       }
 
@@ -206,12 +112,9 @@
         transform: scale(0.95);
       }
 
-      #prev-button {
-        left: 10px;
-      }
-
-      #next-button {
-        right: 10px;
+      /* Ukrywamy standardowy interfejs AR.js */
+      .a-enter-vr {
+        display: none !important;
       }
     </style>
   </head>
@@ -224,8 +127,10 @@
     <div id="marker-status">Nakieruj kamerę na marker Hiro</div>
     
     <!-- Przyciski nawigacji -->
-    <img src="L.png" id="prev-button" class="nav-button" alt="Poprzedni model">
-    <img src="R.png" id="next-button" class="nav-button" alt="Następny model">
+    <div class="model-nav-buttons">
+      <img id="btn-left" src="L.png" class="nav-button" alt="Poprzedni model">
+      <img id="btn-right" src="R.png" class="nav-button" alt="Następny model">
+    </div>
 
     <a-scene
       embedded
@@ -300,34 +205,6 @@
       </a-entity>
     </a-scene>
 
-    <!-- Karuzela modeli -->
-    <div class="carousel-container">
-      <div class="carousel">
-        <div class="carousel-item active" data-model="models/cat.glb" data-usdz="models/cat.usdz">
-          <div class="model-display">
-            <a-entity 
-              id="preview-cat"
-              gltf-model="models/cat.glb" 
-              position="0 -0.2 -1.5" 
-              rotation="0 -45 0" 
-              scale="0.8 0.8 0.8"
-            ></a-entity>
-          </div>
-        </div>
-        <div class="carousel-item" data-model="models/model.glb" data-usdz="models/model.usdz">
-          <div class="model-display">
-            <a-entity 
-              id="preview-chair"
-              gltf-model="models/model.glb" 
-              position="0 -0.2 -1.5" 
-              rotation="0 -45 0" 
-              scale="0.8 0.8 0.8"
-            ></a-entity>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <script>
       // Rejestrujemy komponent do obsługi kliknięć
       AFRAME.registerComponent('clickable', {
@@ -364,113 +241,84 @@
         }
       });
       
+      // Lista modeli
+      const models = [
+        { glb: 'models/cat.glb', usdz: 'models/cat.usdz' },
+        { glb: 'models/model.glb', usdz: 'models/model.usdz' },
+        { glb: 'models/chair.glb', usdz: 'models/chair.usdz' }
+      ];
+      
+      let currentIndex = 0;
+      let currentModel = null;
+      const modelContainer = document.querySelector('#model-container');
+      const loadingScreen = document.getElementById('loading-screen');
+      const loadingText = document.getElementById('loading-text');
+      const markerStatus = document.getElementById('marker-status');
+
+      // Funkcja do przełączania modeli
+      function switchToIndex(index) {
+        if (index < 0) index = models.length - 1;
+        if (index >= models.length) index = 0;
+
+        currentIndex = index;
+        const selectedModel = models[currentIndex];
+        switchModel(selectedModel.glb);
+
+        // Aktualizujemy status markera
+        const hiroMarker = document.querySelector('#hiro-marker');
+        if (hiroMarker && hiroMarker.object3D.visible) {
+          markerStatus.style.display = 'none';
+        } else {
+          markerStatus.style.display = 'block';
+        }
+      }
+
+      // Funkcja do przełączania modeli
+      function switchModel(modelPath) {
+        // Usuwamy poprzedni model, jeśli istnieje
+        if (currentModel && currentModel.parentNode) {
+          currentModel.parentNode.removeChild(currentModel);
+        }
+        
+        // Pobieramy parametry korekty dla wybranego modelu
+        const correction = getModelCorrection(modelPath);
+        
+        // Tworzymy nowy model
+        currentModel = document.createElement('a-entity');
+        currentModel.setAttribute('gltf-model', modelPath);
+        currentModel.setAttribute('scale', correction.scale);
+        currentModel.setAttribute('position', correction.position);
+        currentModel.setAttribute('rotation', correction.rotation);
+        currentModel.setAttribute('mixin', 'spin'); // Dodajemy obrót
+        currentModel.setAttribute('model-orientation', ''); // Dodajemy kontrolę orientacji
+        
+        // Dodajemy model do kontenera
+        modelContainer.appendChild(currentModel);
+        
+        // Obsługa ładowania modelu
+        currentModel.addEventListener('model-loaded', () => {
+          console.log('Model załadowany:', modelPath);
+        });
+        
+        // Obsługa błędu ładowania
+        currentModel.addEventListener('model-error', () => {
+          console.error('Błąd ładowania modelu:', modelPath);
+          loadingScreen.textContent = 'Błąd ładowania modelu';
+          setTimeout(hideLoading, 3000);
+        });
+      }
+
+      // Obsługa przycisków nawigacji
+      document.querySelector('#btn-left').addEventListener('click', () => {
+        switchToIndex(currentIndex - 1);
+      });
+
+      document.querySelector('#btn-right').addEventListener('click', () => {
+        switchToIndex(currentIndex + 1);
+      });
+
+      // Inicjalizacja pierwszego modelu
       document.addEventListener('DOMContentLoaded', async function() {
-        const loadingScreen = document.getElementById('loading-screen');
-        const markerStatus = document.getElementById('marker-status');
-        const carouselItems = document.querySelectorAll('.carousel-item');
-        const modelContainer = document.querySelector('#model-container');
-        
-        // Wyłączamy okna dialogowe AR.js
-        if (window.AR && window.AR.context) {
-          window.AR.context.onInitializationError = function(error) {
-            console.error('Błąd inicjalizacji AR:', error);
-            hideLoading();
-          };
-        }
-        
-        let currentIndex = 0;
-        let currentModel = null;
-        const models = [
-          { glb: 'models/cat.glb', usdz: 'models/cat.usdz' },
-          { glb: 'models/model.glb', usdz: 'models/model.usdz' },
-          { glb: 'models/chair.glb', usdz: 'models/chair.usdz' }
-        ];
-
-        // Funkcja do zarządzania ładowaniem
-        function showLoading(message = 'Ładowanie AR...') {
-          // Pokazujemy loader z podanym komunikatem
-          loadingScreen.textContent = message;
-          loadingScreen.classList.remove('hidden');
-        }
-
-        function hideLoading() {
-          loadingScreen.classList.add('hidden');
-        }
-
-        // Korekta orientacji modeli w zależności od ich typu
-        function getModelCorrection(modelPath) {
-          if (modelPath.includes('cat.glb')) {
-            return {
-              rotation: "0 0 0",
-              position: "0 -0.2 0",
-              scale: "1.5 1.5 1.5"
-            };
-          } else if (modelPath.includes('model.glb')) {
-            return {
-              rotation: "0 0 0",
-              position: "0 -0.2 0",
-              scale: "3 3 3"  // Zwiększamy rozmiar krzesła dwukrotnie (z 1.5 do 3)
-            };
-          }
-          
-          // Wartości domyślne
-          return {
-            rotation: "0 0 0",
-            position: "0 0 0",
-            scale: "1.5 1.5 1.5"
-          };
-        }
-
-        // Funkcja do przełączania modeli
-        function switchModel(modelPath) {
-          // Usuwamy poprzedni model, jeśli istnieje
-          if (currentModel && currentModel.parentNode) {
-            currentModel.parentNode.removeChild(currentModel);
-          }
-          
-          // Pobieramy parametry korekty dla wybranego modelu
-          const correction = getModelCorrection(modelPath);
-          
-          // Tworzymy nowy model
-          currentModel = document.createElement('a-entity');
-          currentModel.setAttribute('gltf-model', modelPath);
-          currentModel.setAttribute('scale', correction.scale);
-          currentModel.setAttribute('position', correction.position);
-          currentModel.setAttribute('rotation', correction.rotation);
-          currentModel.setAttribute('mixin', 'spin'); // Dodajemy obrót
-          currentModel.setAttribute('model-orientation', ''); // Dodajemy kontrolę orientacji
-          
-          // Dodajemy model do kontenera
-          modelContainer.appendChild(currentModel);
-          
-          // Obsługa ładowania modelu
-          currentModel.addEventListener('model-loaded', () => {
-            console.log('Model załadowany:', modelPath);
-          });
-          
-          // Obsługa błędu ładowania
-          currentModel.addEventListener('model-error', () => {
-            console.error('Błąd ładowania modelu:', modelPath);
-            loadingScreen.textContent = 'Błąd ładowania modelu';
-            setTimeout(hideLoading, 3000);
-          });
-        }
-
-        // Obsługa przycisków nawigacji
-        const prevButton = document.getElementById('prev-button');
-        const nextButton = document.getElementById('next-button');
-
-        prevButton.addEventListener('click', () => {
-          currentIndex = (currentIndex - 1 + models.length) % models.length;
-          switchModel(models[currentIndex].glb);
-        });
-
-        nextButton.addEventListener('click', () => {
-          currentIndex = (currentIndex + 1) % models.length;
-          switchModel(models[currentIndex].glb);
-        });
-
-        // Inicjalizacja pierwszego modelu
         try {
           // Sprawdzamy dostępność WebXR
           if ('xr' in navigator) {
@@ -482,19 +330,19 @@
           }
 
           // Ładujemy pierwszy model
-          switchModel(models[currentIndex].glb);
+          switchToIndex(0);
         } catch (error) {
           console.error('Błąd podczas inicjalizacji:', error);
         }
+      });
 
-        // Obsługa markerów
-        const marker = document.querySelector('#hiro-marker');
-        marker.addEventListener('markerFound', () => {
-          markerStatus.style.display = 'none';
-        });
-        marker.addEventListener('markerLost', () => {
-          markerStatus.style.display = 'block';
-        });
+      // Obsługa markerów
+      const marker = document.querySelector('#hiro-marker');
+      marker.addEventListener('markerFound', () => {
+        markerStatus.style.display = 'none';
+      });
+      marker.addEventListener('markerLost', () => {
+        markerStatus.style.display = 'block';
       });
     </script>
   </body>
