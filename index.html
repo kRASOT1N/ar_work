@@ -233,26 +233,18 @@
     <div class="carousel-container">
       <div class="carousel">
         <div class="carousel-item active" data-model="models/cat.glb" data-usdz="models/cat.usdz">
-          <div class="model-display">
-            <a-entity 
-              id="preview-cat"
-              gltf-model="models/cat.glb" 
-              position="0 -0.2 -1.5" 
-              rotation="0 -45 0" 
-              scale="0.8 0.8 0.8"
-            ></a-entity>
-          </div>
+          <a-scene embedded style="width:100px;height:100px;" vr-mode-ui="enabled: false">
+            <a-entity gltf-model="models/cat.glb" position="0 0 -2" scale="1 1 1" rotation="0 45 0"></a-entity>
+            <a-entity light="type: ambient; intensity: 1"></a-entity>
+            <a-camera position="0 0 2"></a-camera>
+          </a-scene>
         </div>
         <div class="carousel-item" data-model="models/model.glb" data-usdz="models/model.usdz">
-          <div class="model-display">
-            <a-entity 
-              id="preview-chair"
-              gltf-model="models/model.glb" 
-              position="0 -0.2 -1.5" 
-              rotation="0 -45 0" 
-              scale="0.8 0.8 0.8"
-            ></a-entity>
-          </div>
+          <a-scene embedded style="width:100px;height:100px;" vr-mode-ui="enabled: false">
+            <a-entity gltf-model="models/model.glb" position="0 0 -2" scale="1 1 1" rotation="0 45 0"></a-entity>
+            <a-entity light="type: ambient; intensity: 1"></a-entity>
+            <a-camera position="0 0 2"></a-camera>
+          </a-scene>
         </div>
       </div>
     </div>
