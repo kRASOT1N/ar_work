@@ -175,11 +175,11 @@
         </a-entity>
         
         <!-- Przyciski AR -->
-        <a-entity position="0 0 0">
+        <a-entity position="0 0.75 0">
           <!-- Przycisk strony internetowej -->
           <a-plane 
             id="website-button" 
-            position="0.7 0 0" 
+            position="1.2 0 0" 
             rotation="0 0 0" 
             width="0.5" 
             height="0.5" 
@@ -191,7 +191,7 @@
           <!-- Przycisk email -->
           <a-plane 
             id="email-button" 
-            position="-0.7 0 0" 
+            position="-1.2 0 0" 
             rotation="0 0 0" 
             width="0.5" 
             height="0.5" 
@@ -261,14 +261,6 @@
         const arHint = document.querySelector('#ar-hint');
         const carouselItems = document.querySelectorAll('.carousel-item');
         const modelContainer = document.querySelector('#model-container');
-        const modelWrapper = document.querySelector('#model-wrapper');
-        
-        // Flagi do śledzenia stanu markera
-        let wasMarkerSeen = false;
-        let isMarkerVisible = false;
-        let lastMarkerPosition = null;
-        let lastMarkerRotation = null;
-        let lastActiveMarker = null;
         
         // Wyłączamy okna dialogowe AR.js
         if (window.AR && window.AR.context) {
@@ -284,11 +276,16 @@
 
         // Funkcja do zarządzania ładowaniem
         function showLoading(message = 'Ładowanie AR...') {
+          // Czyścimy poprzedni timeout, jeśli istnieje
           if (loadingTimeout) {
             clearTimeout(loadingTimeout);
           }
+          
+          // Pokazujemy loader z podanym komunikatem
           loading.textContent = message;
           loading.classList.remove('hidden');
+          
+          // Ustawiamy timeout do automatycznego ukrycia loadera
           loadingTimeout = setTimeout(() => {
             console.warn('Timeout ładowania, ukrywamy wskaźnik');
             loading.classList.add('hidden');
@@ -327,35 +324,33 @@
           };
         }
 
-        // Funkcja do aktualizacji pozycji modelu
-        function updateModelPosition(position, rotation) {
-          if (modelWrapper) {
-            modelWrapper.setAttribute('position', position);
-            modelWrapper.setAttribute('rotation', rotation);
-          }
-        }
-
         // Funkcja do zmiany modelu
         function switchModel(modelPath) {
+          // Usuwamy poprzedni model, jeśli istnieje
           if (currentModel && currentModel.parentNode) {
             currentModel.parentNode.removeChild(currentModel);
           }
           
+          // Pobieramy parametry korekty dla wybranego modelu
           const correction = getModelCorrection(modelPath);
           
+          // Tworzymy nowy model
           currentModel = document.createElement('a-entity');
           currentModel.setAttribute('gltf-model', modelPath);
           currentModel.setAttribute('scale', correction.scale);
           currentModel.setAttribute('position', correction.position);
           currentModel.setAttribute('rotation', correction.rotation);
-          currentModel.setAttribute('mixin', 'spin');
+          currentModel.setAttribute('mixin', 'spin'); // Dodajemy obrót
           
+          // Dodajemy model do kontenera
           modelContainer.appendChild(currentModel);
           
+          // Obsługa ładowania modelu
           currentModel.addEventListener('model-loaded', () => {
             console.log('Model załadowany:', modelPath);
           });
           
+          // Obsługa błędu ładowania
           currentModel.addEventListener('model-error', () => {
             console.error('Błąd ładowania modelu:', modelPath);
             loading.textContent = 'Błąd ładowania modelu';
@@ -430,80 +425,55 @@
             arHint.textContent = 'Brak połączenia z internetem';
           });
           
-          // Obsługa wszystkich markerów
-          const markers = document.querySelectorAll('a-marker');
+          // Obsługa markera Hiro
+          const hiroMarker = document.querySelector('#hiro-marker');
           
-          markers.forEach(marker => {
-            marker.addEventListener('markerFound', () => {
-              console.log('Marker wykryty:', marker.id);
-              isMarkerVisible = true;
-              wasMarkerSeen = true;
-              lastActiveMarker = marker;
-              arHint.classList.add('hidden');
-              
-              // Aktualizujemy ostatnią znaną pozycję i rotację
-              const markerPosition = marker.object3D.position;
-              const markerRotation = marker.object3D.rotation;
-              
-              lastMarkerPosition = {
-                x: markerPosition.x,
-                y: markerPosition.y,
-                z: markerPosition.z
-              };
-              
-              lastMarkerRotation = {
-                x: markerRotation.x,
-                y: markerRotation.y,
-                z: markerRotation.z
-              };
-              
-              // Aktualizujemy pozycję modelu
-              updateModelPosition(lastMarkerPosition, lastMarkerRotation);
-            });
-            
-            marker.addEventListener('markerLost', () => {
-              console.log('Marker utracony:', marker.id);
-              
-              // Jeśli to był ostatni aktywny marker
-              if (lastActiveMarker === marker) {
-                isMarkerVisible = false;
-                
-                if (wasMarkerSeen) {
-                  // Zachowujemy model na miejscu
-                  arHint.textContent = 'Skieruj kamerę na marker, aby zaktualizować pozycję';
-                  arHint.classList.remove('hidden');
-                } else {
-                  arHint.textContent = 'Skieruj kamerę na marker';
-                  arHint.classList.remove('hidden');
-                }
-              }
-            });
+          hiroMarker.addEventListener('markerFound', () => {
+            console.log('Marker Hiro wykryty!');
+            arHint.classList.add('hidden');
           });
           
-          // Funkcja do aktualizacji pozycji modelu w czasie rzeczywistym
-          function updateModelPositionInRealTime() {
-            if (isMarkerVisible && lastActiveMarker) {
-              const markerPosition = lastActiveMarker.object3D.position;
-              const markerRotation = lastActiveMarker.object3D.rotation;
+          hiroMarker.addEventListener('markerLost', () => {
+            console.log('Marker Hiro utracony');
+            arHint.textContent = 'Skieruj kamerę na marker Hiro';
+            arHint.classList.remove('hidden');
+          });
+          
+          // Dodajemy funkcjonalność przesuwania między modelami
+          let startX = 0;
+          document.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+          });
+          
+          document.addEventListener('touchend', (e) => {
+            const endX = e.changedTouches[0].clientX;
+            const diff = startX - endX;
+            
+            // Jeśli użytkownik wykonał wystarczająco duży przesuw
+            if (Math.abs(diff) > 50) {
+              const currentActive = document.querySelector('.carousel-item.active');
+              let nextItem;
               
-              lastMarkerPosition = {
-                x: markerPosition.x,
-                y: markerPosition.y,
-                z: markerPosition.z
-              };
+              if (diff > 0) {
+                // Przesuw w lewo - następny model
+                nextItem = currentActive.nextElementSibling;
+                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
+                  nextItem = document.querySelector('.carousel-item:first-child');
+                }
+              } else {
+                // Przesuw w prawo - poprzedni model
+                nextItem = currentActive.previousElementSibling;
+                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
+                  nextItem = document.querySelector('.carousel-item:last-child');
+                }
+              }
               
-              lastMarkerRotation = {
-                x: markerRotation.x,
-                y: markerRotation.y,
-                z: markerRotation.z
-              };
-              
-              updateModelPosition(lastMarkerPosition, lastMarkerRotation);
+              // Zmieniamy aktywny model
+              carouselItems.forEach(i => i.classList.remove('active'));
+              nextItem.classList.add('active');
+              switchModel(nextItem.dataset.model);
             }
-          }
-
-          // Dodajemy pętlę aktualizacji pozycji
-          setInterval(updateModelPositionInRealTime, 100);
+          });
           
         } catch (error) {
           console.error('Błąd inicjalizacji:', error);
