@@ -237,6 +237,9 @@
     </div>
 
     <script>
+      // Глобальная переменная для отслеживания выбора модели
+      let isModelSelected = false;
+
       // Регистрируем компонент для обработки кликов
       AFRAME.registerComponent('clickable', {
         init: function() {
@@ -274,8 +277,11 @@
         
         qrMarker.addEventListener('markerLost', () => {
           console.log('QR-маркер потерян');
-          arHint.textContent = 'Наведите камеру на QR-код';
-          arHint.classList.remove('hidden');
+          // Показываем подсказку только если модель уже выбрана
+          if (isModelSelected) {
+            arHint.textContent = 'Наведите камеру на QR-код';
+            arHint.classList.remove('hidden');
+          }
         });
 
         // Обработка выбора модели в карусели
@@ -303,6 +309,13 @@
               newModel.setAttribute('position', '0 0 0');
               newModel.setAttribute('animation-mixer', '');
               modelContainer.appendChild(newModel);
+
+              // Отмечаем, что модель выбрана
+              isModelSelected = true;
+              
+              // Обновляем подсказку
+              arHint.textContent = 'Наведите камеру на QR-код';
+              arHint.classList.remove('hidden');
             }
           });
         });
