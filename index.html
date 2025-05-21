@@ -244,8 +244,7 @@
       // Lista modeli
       const models = [
         { glb: 'models/cat.glb', usdz: 'models/cat.usdz' },
-        { glb: 'models/model.glb', usdz: 'models/model.usdz' },
-        { glb: 'models/chair.glb', usdz: 'models/chair.usdz' }
+        { glb: 'models/model.glb', usdz: 'models/model.usdz' }
       ];
       
       let currentIndex = 0;
@@ -279,13 +278,7 @@
             position: "0 -0.2 0",
             scale: "3 3 3"
           };
-        } else if (modelPath.includes('chair.glb')) {
-          return {
-            rotation: "0 0 0",
-            position: "0 -0.2 0",
-            scale: "2 2 2"
-          };
-        }
+        } 
         
         // Wartości domyślne
         return {
