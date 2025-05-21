@@ -150,8 +150,7 @@
         display: none !important;
       }
 
-      /* Существующие стили */
-      .loading-overlay {
+      #loading-screen {
         position: fixed;
         top: 0;
         left: 0;
@@ -159,56 +158,75 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.8);
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         z-index: 9999;
         color: white;
-        font-size: 24px;
       }
 
-      /* Стили для карусели превью */
-      .preview-carousel {
+      #loading-screen.hidden {
+        display: none;
+      }
+
+      #loading-text {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+
+      #marker-status {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 16px;
+        z-index: 1000;
+        display: none;
+      }
+
+      .nav-button {
         position: fixed;
         bottom: 20px;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        z-index: 1000;
-        padding: 10px;
-        background: rgba(0, 0, 0, 0.5);
-      }
-
-      .preview-item {
-        width: 100px;
-        height: 100px;
-        border: 2px solid white;
-        border-radius: 8px;
-        overflow: hidden;
+        width: 50px;
+        height: 50px;
         cursor: pointer;
+        z-index: 1000;
         transition: transform 0.2s;
       }
 
-      .preview-item:hover {
-        transform: scale(1.05);
+      .nav-button:hover {
+        transform: scale(1.1);
       }
 
-      .preview-item.active {
-        border-color: #4CAF50;
+      .nav-button:active {
+        transform: scale(0.95);
       }
 
-      .preview-scene {
-        width: 100%;
-        height: 100%;
+      #prev-button {
+        left: 10px;
+      }
+
+      #next-button {
+        right: 10px;
       }
     </style>
   </head>
   <body>
-    <div class="loading" id="loading">Ładowanie AR...</div>
-    <div class="ar-hint" id="ar-hint">Wybierz model na dole ekranu</div>
+    <div id="loading-screen">
+      <div class="spinner"></div>
+      <div id="loading-text">Ładowanie modelu...</div>
+    </div>
+    
+    <div id="marker-status">Nakieruj kamerę na marker Hiro</div>
+    
+    <!-- Przyciski nawigacji -->
+    <img src="L.png" id="prev-button" class="nav-button" alt="Poprzedni model">
+    <img src="R.png" id="next-button" class="nav-button" alt="Następny model">
 
-    <!-- Scena A-Frame -->
     <a-scene
       embedded
       arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3;"
@@ -282,11 +300,32 @@
       </a-entity>
     </a-scene>
 
-    <!-- Кнопки для переключения моделей -->
-    <div id="model-switcher" style="position: fixed; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000;">
-      <img id="btn-left" src="l.png" alt="Влево" style="width: 48px; height: 48px; margin: 0 20px; cursor: pointer; opacity: 0.85;">
-      <span id="model-label" style="color: white; font-size: 20px; min-width: 80px; text-align: center;"></span>
-      <img id="btn-right" src="r.png" alt="Вправо" style="width: 48px; height: 48px; margin: 0 20px; cursor: pointer; opacity: 0.85;">
+    <!-- Karuzela modeli -->
+    <div class="carousel-container">
+      <div class="carousel">
+        <div class="carousel-item active" data-model="models/cat.glb" data-usdz="models/cat.usdz">
+          <div class="model-display">
+            <a-entity 
+              id="preview-cat"
+              gltf-model="models/cat.glb" 
+              position="0 -0.2 -1.5" 
+              rotation="0 -45 0" 
+              scale="0.8 0.8 0.8"
+            ></a-entity>
+          </div>
+        </div>
+        <div class="carousel-item" data-model="models/model.glb" data-usdz="models/model.usdz">
+          <div class="model-display">
+            <a-entity 
+              id="preview-chair"
+              gltf-model="models/model.glb" 
+              position="0 -0.2 -1.5" 
+              rotation="0 -45 0" 
+              scale="0.8 0.8 0.8"
+            ></a-entity>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -326,8 +365,8 @@
       });
       
       document.addEventListener('DOMContentLoaded', async function() {
-        const loading = document.querySelector('#loading');
-        const arHint = document.querySelector('#ar-hint');
+        const loadingScreen = document.getElementById('loading-screen');
+        const markerStatus = document.getElementById('marker-status');
         const carouselItems = document.querySelectorAll('.carousel-item');
         const modelContainer = document.querySelector('#model-container');
         
@@ -339,34 +378,23 @@
           };
         }
         
+        let currentIndex = 0;
         let currentModel = null;
-        let loadingTimeout = null;
-        const LOADING_TIMEOUT = 10000; // 10 sekund maksymalny czas ładowania
+        const models = [
+          { glb: 'models/cat.glb', usdz: 'models/cat.usdz' },
+          { glb: 'models/model.glb', usdz: 'models/model.usdz' },
+          { glb: 'models/chair.glb', usdz: 'models/chair.usdz' }
+        ];
 
         // Funkcja do zarządzania ładowaniem
         function showLoading(message = 'Ładowanie AR...') {
-          // Czyścimy poprzedni timeout, jeśli istnieje
-          if (loadingTimeout) {
-            clearTimeout(loadingTimeout);
-          }
-          
           // Pokazujemy loader z podanym komunikatem
-          loading.textContent = message;
-          loading.classList.remove('hidden');
-          
-          // Ustawiamy timeout do automatycznego ukrycia loadera
-          loadingTimeout = setTimeout(() => {
-            console.warn('Timeout ładowania, ukrywamy wskaźnik');
-            loading.classList.add('hidden');
-          }, LOADING_TIMEOUT);
+          loadingScreen.textContent = message;
+          loadingScreen.classList.remove('hidden');
         }
 
         function hideLoading() {
-          if (loadingTimeout) {
-            clearTimeout(loadingTimeout);
-            loadingTimeout = null;
-          }
-          loading.classList.add('hidden');
+          loadingScreen.classList.add('hidden');
         }
 
         // Korekta orientacji modeli w zależności od ich typu
@@ -393,7 +421,7 @@
           };
         }
 
-        // Funkcja do zmiany modelu
+        // Funkcja do przełączania modeli
         function switchModel(modelPath) {
           // Usuwamy poprzedni model, jeśli istnieje
           if (currentModel && currentModel.parentNode) {
@@ -423,157 +451,51 @@
           // Obsługa błędu ładowania
           currentModel.addEventListener('model-error', () => {
             console.error('Błąd ładowania modelu:', modelPath);
-            loading.textContent = 'Błąd ładowania modelu';
+            loadingScreen.textContent = 'Błąd ładowania modelu';
             setTimeout(hideLoading, 3000);
           });
         }
 
-        // Inicjalizacja
+        // Obsługa przycisków nawigacji
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+
+        prevButton.addEventListener('click', () => {
+          currentIndex = (currentIndex - 1 + models.length) % models.length;
+          switchModel(models[currentIndex].glb);
+        });
+
+        nextButton.addEventListener('click', () => {
+          currentIndex = (currentIndex + 1) % models.length;
+          switchModel(models[currentIndex].glb);
+        });
+
+        // Inicjalizacja pierwszego modelu
         try {
-          // Wstępnie akceptujemy wszystkie uprawnienia
-          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-              .then(stream => {
-                // Zatrzymujemy strumień po uzyskaniu uprawnień
-                stream.getTracks().forEach(track => track.stop());
-                console.log('Uprawnienia kamery przyznane');
-              })
-              .catch(error => {
-                console.error('Błąd dostępu do kamery:', error);
-              });
-          }
-          
-          // Obsługa wyboru modelu
-          carouselItems.forEach(item => {
-            item.addEventListener('click', () => {
-              carouselItems.forEach(i => i.classList.remove('active'));
-              item.classList.add('active');
-              
-              // Zmieniamy model
-              switchModel(item.dataset.model);
-              
-              // Sprawdzamy, czy marker jest już wykryty
-              const hiroMarker = document.querySelector('#hiro-marker');
-              if (hiroMarker && hiroMarker.object3D.visible) {
-                // Jeśli marker jest widoczny, ukrywamy podpowiedź
-                arHint.classList.add('hidden');
-              } else {
-                // Jeśli marker nie jest widoczny, pokazujemy podpowiedź
-                arHint.textContent = 'Skieruj kamerę na marker Hiro';
-                arHint.classList.remove('hidden');
-              }
-            });
-          });
-          
-          // Sprawdzamy, czy urządzenie jest mobilne
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          if (!isMobile) {
-            loading.textContent = 'AR jest dostępne tylko na urządzeniach mobilnych';
-            arHint.textContent = 'AR jest dostępne tylko na urządzeniach mobilnych';
-          } else {
-            loading.classList.add('hidden');
-          }
-          
-          // Ustawiamy domyślny aktywny model
-          if (carouselItems.length > 0) {
-            const firstItem = carouselItems[0];
-            switchModel(firstItem.dataset.model);
-          }
-          
-          // Obsługa błędów połączenia
-          window.addEventListener('online', () => {
-            console.log('Połączenie przywrócone');
-            // Przeładowujemy aktualny model
-            const activeItem = document.querySelector('.carousel-item.active');
-            if (activeItem) {
-              switchModel(activeItem.dataset.model);
+          // Sprawdzamy dostępność WebXR
+          if ('xr' in navigator) {
+            const isSupported = await navigator.xr.isSessionSupported('immersive-ar');
+            if (!isSupported) {
+              console.log('AR nie jest wspierane na tym urządzeniu');
+              return;
             }
-          });
-          
-          window.addEventListener('offline', () => {
-            console.warn('Połączenie utracone');
-            arHint.textContent = 'Brak połączenia z internetem';
-          });
-          
-          // Obsługa markera Hiro
-          const hiroMarker = document.querySelector('#hiro-marker');
-          
-          hiroMarker.addEventListener('markerFound', () => {
-            console.log('Marker Hiro wykryty!');
-            arHint.classList.add('hidden');
-          });
-          
-          hiroMarker.addEventListener('markerLost', () => {
-            console.log('Marker Hiro utracony');
-            arHint.textContent = 'Skieruj kamerę na marker Hiro';
-            arHint.classList.remove('hidden');
-          });
-          
-          // Dodajemy funkcjonalność przesuwania między modelami
-          let startX = 0;
-          document.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-          });
-          
-          document.addEventListener('touchend', (e) => {
-            const endX = e.changedTouches[0].clientX;
-            const diff = startX - endX;
-            
-            // Jeśli użytkownik wykonał wystarczająco duży przesuw
-            if (Math.abs(diff) > 50) {
-              const currentActive = document.querySelector('.carousel-item.active');
-              let nextItem;
-              
-              if (diff > 0) {
-                // Przesuw w lewo - następny model
-                nextItem = currentActive.nextElementSibling;
-                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
-                  nextItem = document.querySelector('.carousel-item:first-child');
-                }
-              } else {
-                // Przesuw w prawo - poprzedni model
-                nextItem = currentActive.previousElementSibling;
-                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
-                  nextItem = document.querySelector('.carousel-item:last-child');
-                }
-              }
-              
-              // Zmieniamy aktywny model
-              carouselItems.forEach(i => i.classList.remove('active'));
-              nextItem.classList.add('active');
-              switchModel(nextItem.dataset.model);
-            }
-          });
-          
+          }
+
+          // Ładujemy pierwszy model
+          switchModel(models[currentIndex].glb);
         } catch (error) {
-          console.error('Błąd inicjalizacji:', error);
-          arHint.textContent = 'Błąd inicjalizacji: ' + error.message;
-          hideLoading();
+          console.error('Błąd podczas inicjalizacji:', error);
         }
+
+        // Obsługa markerów
+        const marker = document.querySelector('#hiro-marker');
+        marker.addEventListener('markerFound', () => {
+          markerStatus.style.display = 'none';
+        });
+        marker.addEventListener('markerLost', () => {
+          markerStatus.style.display = 'block';
+        });
       });
-
-      // Переключение моделей по кнопкам
-      const models = [
-        { path: 'model.glb', label: 'Стул' },
-        { path: 'cat.glb', label: 'Кот' }
-      ];
-      let currentIndex = 0; // по умолчанию стул
-
-      function updateModel() {
-        switchModel(models[currentIndex].path);
-        document.getElementById('model-label').textContent = models[currentIndex].label;
-      }
-
-      document.getElementById('btn-left').onclick = () => {
-        currentIndex = (currentIndex - 1 + models.length) % models.length;
-        updateModel();
-      };
-      document.getElementById('btn-right').onclick = () => {
-        currentIndex = (currentIndex + 1) % models.length;
-        updateModel();
-      };
-
-      document.addEventListener('DOMContentLoaded', updateModel);
     </script>
   </body>
 </html>
