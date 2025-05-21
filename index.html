@@ -198,12 +198,10 @@
         raycaster="objects: .clickable"
         emitevents="true">
 
-        <!-- 3D Model -->
-        <a-box position="0 0.5 0" 
-               material="color: yellow; opacity: 0.7;"
-               animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear;"
-               class="clickable">
-        </a-box>
+        <!-- Model container -->
+        <a-entity id="model-container" position="0 0.75 0" rotation="0 0 0" scale="1 1 1">
+          <!-- 3D Model will be loaded here -->
+        </a-entity>
 
         <!-- Debug visualization -->
         <a-entity debug="true"></a-entity>
@@ -368,7 +366,7 @@
         // Marker tracking variables
         let markerVisible = false;
         let markerLostTimeout = null;
-        const MARKER_LOST_DELAY = 10000; // 1 second delay before hiding
+        const MARKER_LOST_DELAY = 1000; // 1 second delay before hiding
 
         // Get marker element
         const marker = document.querySelector('#marker');
@@ -547,6 +545,11 @@
           arHint.textContent = 'Błąd inicjalizacji: ' + error.message;
           hideLoading();
         }
+      });
+
+      // Hide loading screen when scene is ready
+      document.querySelector('a-scene').addEventListener('loaded', function () {
+        document.getElementById('loading').style.display = 'none';
       });
     </script>
   </body>
