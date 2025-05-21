@@ -176,7 +176,7 @@
         smoothCount="10" 
         smoothTolerance="0.01" 
         smoothThreshold="2"
-        minConfidence="0.1"
+        minConfidence="0.15"
         raycaster="objects: .clickable"
         emitevents="true"
         id="marker"
@@ -233,10 +233,26 @@
     <div class="carousel-container">
       <div class="carousel">
         <div class="carousel-item active" data-model="models/cat.glb" data-usdz="models/cat.usdz">
-          <img src="thumbnails/cat.jpg" style="width:100px;height:100px;object-fit:contain;">
+          <div class="model-display">
+            <a-entity 
+              id="preview-cat"
+              gltf-model="models/cat.glb" 
+              position="0 -0.2 -1.5" 
+              rotation="0 -45 0" 
+              scale="0.8 0.8 0.8"
+            ></a-entity>
+          </div>
         </div>
         <div class="carousel-item" data-model="models/model.glb" data-usdz="models/model.usdz">
-          <img src="thumbnails/chair.jpg" style="width:100px;height:100px;object-fit:contain;">
+          <div class="model-display">
+            <a-entity 
+              id="preview-chair"
+              gltf-model="models/model.glb" 
+              position="0 -0.2 -1.5" 
+              rotation="0 -45 0" 
+              scale="0.8 0.8 0.8"
+            ></a-entity>
+          </div>
         </div>
       </div>
     </div>
