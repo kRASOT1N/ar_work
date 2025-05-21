@@ -6,34 +6,34 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-touch-fullscreen" content="yes">
-    <title>AR Viewer</title>
+    <title>Przeglądarka AR</title>
     
-    <!-- AR.js и A-Frame библиотеки -->
+    <!-- Biblioteki AR.js i A-Frame -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     
-    <!-- Скрипт для отключения диалоговых окон AR.js -->
+    <!-- Skrypt do wyłączania okien dialogowych AR.js -->
     <script>
-      // Отключаем диалоговые окна AR.js
+      // Wyłączamy okna dialogowe AR.js
       window.addEventListener('load', function() {
-        // Отключаем запрос разрешения на использование AR
+        // Wyłączamy prośbę o zgodę na użycie AR
         if (window.ARjs && window.ARjs.Utils) {
           window.ARjs.Utils.displayResolutionPrompt = function() {};
         }
         
-        // Переопределяем стандартный confirm
+        // Nadpisujemy standardowy confirm
         const originalConfirm = window.confirm;
         window.confirm = function(message) {
-          console.log('Confirm dialog bypassed:', message);
-          return true; // Всегда возвращаем true, как будто пользователь нажал "OK"
+          console.log('Okno potwierdzenia pominięte:', message);
+          return true; // Zawsze zwracamy true, jakby użytkownik kliknął "OK"
         };
         
-        // Переопределяем стандартный prompt
+        // Nadpisujemy standardowy prompt
         const originalPrompt = window.prompt;
         window.prompt = function(message, defaultValue) {
-          console.log('Prompt dialog bypassed:', message);
-          return defaultValue; // Возвращаем значение по умолчанию
+          console.log('Okno wprowadzania pominięte:', message);
+          return defaultValue; // Zwracamy wartość domyślną
         };
       });
     </script>
@@ -145,7 +145,7 @@
         pointer-events: none;
       }
 
-      /* Скрываем стандартный интерфейс AR.js */
+      /* Ukrywamy standardowy interfejs AR.js */
       .a-enter-vr {
         display: none !important;
       }
@@ -155,28 +155,28 @@
     <div class="loading" id="loading">Ładowanie AR...</div>
     <div class="ar-hint" id="ar-hint">Wybierz model na dole ekranu</div>
 
-    <!-- A-Frame сцена -->
+    <!-- Scena A-Frame -->
     <a-scene
       embedded
       arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
     >
-      <!-- Компонент для вращения -->
+      <!-- Komponent do obrotu -->
       <a-assets>
         <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
     
-      <!-- Маркер Hiro -->
+      <!-- Marker Hiro -->
       <a-marker id="hiro-marker" type="pattern" preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
-        <!-- Контейнер для модели с вращением -->
+        <!-- Kontener modelu z obrotem -->
         <a-entity id="model-wrapper" position="0 0.75 0">
           <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
         
-        <!-- AR кнопки -->
+        <!-- Przyciski AR -->
         <a-entity position="0 0 0">
-          <!-- Веб-сайт кнопка -->
+          <!-- Przycisk strony internetowej -->
           <a-plane 
             id="website-button" 
             position="0.7 0 0" 
@@ -188,7 +188,7 @@
             class="clickable"
           ></a-plane>
           
-          <!-- Email кнопка -->
+          <!-- Przycisk email -->
           <a-plane 
             id="email-button" 
             position="-0.7 0 0" 
@@ -202,13 +202,13 @@
         </a-entity>
       </a-marker>
       
-      <!-- Камера с курсором для взаимодействия -->
+      <!-- Kamera z kursorem do interakcji -->
       <a-entity camera>
         <a-cursor raycaster="objects: .clickable"></a-cursor>
       </a-entity>
     </a-scene>
 
-    <!-- Карусель моделей -->
+    <!-- Karuzela modeli -->
     <div class="carousel-container">
       <div class="carousel">
         <div class="carousel-item active" data-model="models/cat.glb" data-usdz="models/cat.usdz">
@@ -237,7 +237,7 @@
     </div>
 
     <script>
-      // Регистрируем компонент для обработки кликов
+      // Rejestrujemy komponent do obsługi kliknięć
       AFRAME.registerComponent('clickable', {
         init: function() {
           const el = this.el;
@@ -247,7 +247,7 @@
             
             if (id === 'website-button') {
               window.open('https://www.alphawood.store', '_blank');
-              console.log('Website button clicked');
+              console.log('Kliknięto przycisk strony internetowej');
             } else if (id === 'email-button') {
               window.location.href = 'mailto:info@alphawood.store';
               console.log('Email button clicked');
@@ -272,7 +272,7 @@
         
         let currentModel = null;
         let loadingTimeout = null;
-        const LOADING_TIMEOUT = 10000; // 10 секунд максимальное время отображения загрузки
+        const LOADING_TIMEOUT = 10000; // 10 seconds maximum loading time
 
         // Функция для управления загрузчиком
         function showLoading(message = 'Загрузка AR...') {
