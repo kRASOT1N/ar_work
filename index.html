@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="pl">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -116,7 +116,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        color: black;
+        color: white;
         font-size: 18px;
         z-index: 2000;
       }
@@ -131,7 +131,7 @@
         top: 50%;
         transform: translate(-50%, -50%);
         background: rgba(0, 0, 0, 0.8);
-        color: black;
+        color: white;
         padding: 15px 25px;
         border-radius: 10px;
         text-align: center;
@@ -152,13 +152,13 @@
     </style>
   </head>
   <body>
-    <div class="loading" id="loading">Загрузка AR...</div>
-    <div class="ar-hint" id="ar-hint">Выберите модель внизу экрана</div>
+    <div class="loading" id="loading">Ładowanie AR...</div>
+    <div class="ar-hint" id="ar-hint">Wybierz model na dole ekranu</div>
 
     <!-- A-Frame сцена -->
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
     >
@@ -168,7 +168,7 @@
       </a-assets>
     
       <!-- Маркер Hiro -->
-      <a-marker id="hiro-marker" type="pattern" preset="hiro">
+      <a-marker id="hiro-marker" type="pattern" preset="hiro" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
         <!-- Контейнер для модели с вращением -->
         <a-entity id="model-wrapper" position="0 0.75 0">
           <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
