@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <title>AR Viewer</title>
+    
+    <!-- AR.js и A-Frame библиотеки -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    
+    <!-- Скрипт для отключения диалоговых окон AR.js -->
+    <script>
+      // Отключаем диалоговые окна AR.js
+      window.addEventListener('load', function() {
+        // Отключаем запрос разрешения на использование AR
+        if (window.ARjs && window.ARjs.Utils) {
+          window.ARjs.Utils.displayResolutionPrompt = function() {};
+        }
+        
+        // Переопределяем стандартный confirm
+        const originalConfirm = window.confirm;
+        window.confirm = function(message) {
+          console.log('Confirm dialog bypassed:', message);
+          return true; // Всегда возвращаем true, как будто пользователь нажал "OK"
+        };
+        
+        // Переопределяем стандартный prompt
+        const originalPrompt = window.prompt;
+        window.prompt = function(message, defaultValue) {
+          console.log('Prompt dialog bypassed:', message);
+          return defaultValue; // Возвращаем значение по умолчанию
+        };
+      });
+    </script>
+    
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .carousel-container {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 95%;
+        max-width: 600px;
+        z-index: 1000;
+      }
+
+      .carousel {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 15px;
+        padding: 10px;
+        width: 100%;
+        max-width: 500px;
+        overflow: hidden;
+      }
+
+      .carousel-item {
+        flex: 0 0 auto;
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid transparent;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 15px;
+        position: relative;
+      }
+
+      .model-display {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .carousel-item:hover {
+        transform: scale(1.05);
+      }
+
+      .carousel-item.active {
+        border-color: #007AFF;
+      }
+
+      .loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: black;
+        font-size: 18px;
+        z-index: 2000;
+      }
+
+      .loading.hidden {
+        display: none;
+      }
+
+      .ar-hint {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: black;
+        padding: 15px 25px;
+        border-radius: 10px;
+        text-align: center;
+        z-index: 1000;
+        font-size: 16px;
+        transition: opacity 0.3s ease;
+      }
+
+      .ar-hint.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Скрываем стандартный интерфейс AR.js */
+      .a-enter-vr {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading" id="loading">Загрузка AR...</div>
+    <div class="ar-hint" id="ar-hint">Выберите модель внизу экрана</div>
+
+    <!-- A-Frame сцена -->
+    <a-scene
+      embedded
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000;"
+      renderer="logarithmicDepthBuffer: true; precision: medium;"
+      vr-mode-ui="enabled: false"
+    >
+      <!-- Компонент для вращения -->
+      <a-assets>
+        <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
+      </a-assets>
+    
+      <!-- Маркер Hiro -->
+      <a-marker id="hiro-marker" type="pattern" preset="hiro">
+        <!-- Контейнер для модели с вращением -->
+        <a-entity id="model-wrapper" position="0 0.75 0">
+          <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
+        </a-entity>
+        
+        <!-- AR кнопки -->
+        <a-entity position="0 0 0">
+          <!-- Веб-сайт кнопка -->
+          <a-plane 
+            id="website-button" 
+            position="0.7 0 0" 
+            rotation="0 0 0" 
+            width="0.5" 
+            height="0.5" 
+            material="src: site.png; transparent: true;"
+            look-at="[camera]"
+            class="clickable"
+          ></a-plane>
+          
+          <!-- Email кнопка -->
+          <a-plane 
+            id="email-button" 
+            position="-0.7 0 0" 
+            rotation="0 0 0" 
+            width="0.5" 
+            height="0.5" 
+            material="src: em.png; transparent: true;"
+            look-at="[camera]"
+            class="clickable"
+          ></a-plane>
+        </a-entity>
+      </a-marker>
+      
+      <!-- Камера с курсором для взаимодействия -->
+      <a-entity camera>
+        <a-cursor raycaster="objects: .clickable"></a-cursor>
+      </a-entity>
+    </a-scene>
+
+    <!-- Карусель моделей -->
+    <div class="carousel-container">
+      <div class="carousel">
+        <div class="carousel-item active" data-model="models/cat.glb" data-usdz="models/cat.usdz">
+          <div class="model-display">
+            <a-entity 
+              id="preview-cat"
+              gltf-model="models/cat.glb" 
+              position="0 -0.2 -1.5" 
+              rotation="0 -45 0" 
+              scale="0.8 0.8 0.8"
+            ></a-entity>
+          </div>
+        </div>
+        <div class="carousel-item" data-model="models/model.glb" data-usdz="models/model.usdz">
+          <div class="model-display">
+            <a-entity 
+              id="preview-chair"
+              gltf-model="models/model.glb" 
+              position="0 -0.2 -1.5" 
+              rotation="0 -45 0" 
+              scale="0.8 0.8 0.8"
+            ></a-entity>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Регистрируем компонент для обработки кликов
+      AFRAME.registerComponent('clickable', {
+        init: function() {
+          const el = this.el;
+          
+          el.addEventListener('click', function() {
+            const id = el.id;
+            
+            if (id === 'website-button') {
+              window.open('https://www.alphawood.store', '_blank');
+              console.log('Website button clicked');
+            } else if (id === 'email-button') {
+              window.location.href = 'mailto:info@alphawood.store';
+              console.log('Email button clicked');
+            }
+          });
+        }
+      });
+      
+      document.addEventListener('DOMContentLoaded', async function() {
+        const loading = document.querySelector('#loading');
+        const arHint = document.querySelector('#ar-hint');
+        const carouselItems = document.querySelectorAll('.carousel-item');
+        const modelContainer = document.querySelector('#model-container');
+        
+        // Отключаем диалоги AR.js
+        if (window.AR && window.AR.context) {
+          window.AR.context.onInitializationError = function(error) {
+            console.error('AR initialization error:', error);
+            hideLoading();
+          };
+        }
+        
+        let currentModel = null;
+        let loadingTimeout = null;
+        const LOADING_TIMEOUT = 10000; // 10 секунд максимальное время отображения загрузки
+
+        // Функция для управления загрузчиком
+        function showLoading(message = 'Загрузка AR...') {
+          // Очищаем предыдущий таймаут, если он есть
+          if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+          }
+          
+          // Показываем загрузчик с указанным сообщением
+          loading.textContent = message;
+          loading.classList.remove('hidden');
+          
+          // Устанавливаем таймаут для автоматического скрытия загрузчика
+          loadingTimeout = setTimeout(() => {
+            console.warn('Таймаут загрузки, скрываем индикатор');
+            loading.classList.add('hidden');
+          }, LOADING_TIMEOUT);
+        }
+
+        function hideLoading() {
+          if (loadingTimeout) {
+            clearTimeout(loadingTimeout);
+            loadingTimeout = null;
+          }
+          loading.classList.add('hidden');
+        }
+
+        // Коррекция ориентации моделей в зависимости от их типа
+        function getModelCorrection(modelPath) {
+          if (modelPath.includes('cat.glb')) {
+            return {
+              rotation: "0 0 0",
+              position: "0 -0.2 0",
+              scale: "1.5 1.5 1.5"
+            };
+          } else if (modelPath.includes('model.glb')) {
+            return {
+              rotation: "0 0 0",
+              position: "0 -0.2 0",
+              scale: "3 3 3"  // Увеличиваем размер стула вдвое (с 1.5 до 3)
+            };
+          }
+          
+          // Значения по умолчанию
+          return {
+            rotation: "0 0 0",
+            position: "0 0 0",
+            scale: "1.5 1.5 1.5"
+          };
+        }
+
+        // Функция для смены модели
+        function switchModel(modelPath) {
+          showLoading('Загрузка модели...');
+          
+          // Удаляем предыдущую модель, если она есть
+          if (currentModel && currentModel.parentNode) {
+            currentModel.parentNode.removeChild(currentModel);
+          }
+          
+          // Получаем параметры коррекции для выбранной модели
+          const correction = getModelCorrection(modelPath);
+          
+          // Создаем новую модель
+          currentModel = document.createElement('a-entity');
+          currentModel.setAttribute('gltf-model', modelPath);
+          currentModel.setAttribute('scale', correction.scale);
+          currentModel.setAttribute('position', correction.position);
+          currentModel.setAttribute('rotation', correction.rotation);
+          currentModel.setAttribute('mixin', 'spin'); // Добавляем вращение
+          
+          // Добавляем модель в контейнер
+          modelContainer.appendChild(currentModel);
+          
+          // Обработчик загрузки модели
+          currentModel.addEventListener('model-loaded', () => {
+            console.log('Модель загружена:', modelPath);
+            hideLoading();
+          });
+          
+          // Обработчик ошибки загрузки
+          currentModel.addEventListener('model-error', () => {
+            console.error('Ошибка загрузки модели:', modelPath);
+            loading.textContent = 'Ошибка загрузки модели';
+            setTimeout(hideLoading, 3000);
+          });
+        }
+
+        // Инициализация
+        try {
+          // Предварительно принимаем все разрешения
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+              .then(stream => {
+                // Останавливаем поток после получения разрешения
+                stream.getTracks().forEach(track => track.stop());
+                console.log('Camera permission granted');
+              })
+              .catch(error => {
+                console.error('Error accessing camera:', error);
+              });
+          }
+          
+          // Обработчик выбора модели
+          carouselItems.forEach(item => {
+            item.addEventListener('click', () => {
+              carouselItems.forEach(i => i.classList.remove('active'));
+              item.classList.add('active');
+              
+              // Меняем модель
+              switchModel(item.dataset.model);
+              
+              // Обновляем подсказку
+              arHint.textContent = 'Наведите камеру на маркер Hiro';
+              arHint.classList.remove('hidden');
+            });
+          });
+          
+          // Проверяем, является ли устройство мобильным
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (!isMobile) {
+            loading.textContent = 'AR доступен только на мобильных устройствах';
+            arHint.textContent = 'AR доступен только на мобильных устройствах';
+          } else {
+            loading.classList.add('hidden');
+          }
+          
+          // Устанавливаем активную модель по умолчанию
+          if (carouselItems.length > 0) {
+            const firstItem = carouselItems[0];
+            switchModel(firstItem.dataset.model);
+          }
+          
+          // Обработка ошибок соединения
+          window.addEventListener('online', () => {
+            console.log('Соединение восстановлено');
+            // Перезагружаем текущую модель
+            const activeItem = document.querySelector('.carousel-item.active');
+            if (activeItem) {
+              switchModel(activeItem.dataset.model);
+            }
+          });
+          
+          window.addEventListener('offline', () => {
+            console.warn('Соединение потеряно');
+            arHint.textContent = 'Отсутствует подключение к интернету';
+          });
+          
+          // Обработка маркера Hiro
+          const hiroMarker = document.querySelector('#hiro-marker');
+          
+          hiroMarker.addEventListener('markerFound', () => {
+            console.log('Маркер Hiro обнаружен!');
+            arHint.classList.add('hidden');
+          });
+          
+          hiroMarker.addEventListener('markerLost', () => {
+            console.log('Маркер Hiro потерян');
+            arHint.textContent = 'Наведите камеру на маркер Hiro';
+            arHint.classList.remove('hidden');
+          });
+          
+          // Добавляем функционал свайпа между моделями
+          let startX = 0;
+          document.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+          });
+          
+          document.addEventListener('touchend', (e) => {
+            const endX = e.changedTouches[0].clientX;
+            const diff = startX - endX;
+            
+            // Если пользователь сделал достаточно большой свайп
+            if (Math.abs(diff) > 50) {
+              const currentActive = document.querySelector('.carousel-item.active');
+              let nextItem;
+              
+              if (diff > 0) {
+                // Свайп влево - следующая модель
+                nextItem = currentActive.nextElementSibling;
+                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
+                  nextItem = document.querySelector('.carousel-item:first-child');
+                }
+              } else {
+                // Свайп вправо - предыдущая модель
+                nextItem = currentActive.previousElementSibling;
+                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
+                  nextItem = document.querySelector('.carousel-item:last-child');
+                }
+              }
+              
+              // Меняем активную модель
+              carouselItems.forEach(i => i.classList.remove('active'));
+              nextItem.classList.add('active');
+              switchModel(nextItem.dataset.model);
+            }
+          });
+          
+        } catch (error) {
+          console.error('Ошибка инициализации:', error);
+          arHint.textContent = 'Ошибка инициализации: ' + error.message;
+          hideLoading();
+        }
+      });
+    </script>
+  </body>
+</html>
