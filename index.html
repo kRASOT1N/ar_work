@@ -131,7 +131,7 @@
         top: 50%;
         transform: translate(-50%, -50%);
         background: rgba(0, 0, 0, 0.8);
-        color: black;
+        color: white;
         padding: 15px 25px;
         border-radius: 10px;
         text-align: center;
@@ -158,7 +158,7 @@
     <!-- A-Frame сцена -->
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; sourceWidth: 1280; sourceHeight: 720; canvasWidth: 1280; canvasHeight: 720; displayWidth: 1280; displayHeight: 720;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
     >
@@ -167,8 +167,8 @@
         <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
     
-      <!-- Маркер Hiro -->
-      <a-marker id="hiro-marker" type="pattern" preset="hiro">
+      <!-- QR-код маркер -->
+      <a-marker id="qr-marker" type="barcode" value="7">
         <!-- Контейнер для модели с вращением -->
         <a-entity id="model-wrapper" position="0 0.75 0">
           <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
@@ -255,227 +255,64 @@
           });
         }
       });
-      
-      document.addEventListener('DOMContentLoaded', async function() {
-        const loading = document.querySelector('#loading');
-        const arHint = document.querySelector('#ar-hint');
+
+      // Инициализация после загрузки DOM
+      document.addEventListener('DOMContentLoaded', function() {
+        // Элементы интерфейса
+        const loading = document.getElementById('loading');
+        const arHint = document.getElementById('ar-hint');
         const carouselItems = document.querySelectorAll('.carousel-item');
         const modelContainer = document.querySelector('#model-container');
         
-        // Отключаем диалоги AR.js
-        if (window.AR && window.AR.context) {
-          window.AR.context.onInitializationError = function(error) {
-            console.error('AR initialization error:', error);
-            hideLoading();
-          };
-        }
+        // Обработка QR-маркера
+        const qrMarker = document.querySelector('#qr-marker');
         
-        let currentModel = null;
-        let loadingTimeout = null;
-        const LOADING_TIMEOUT = 10000; // 10 секунд максимальное время отображения загрузки
+        qrMarker.addEventListener('markerFound', () => {
+          console.log('QR-маркер обнаружен!');
+          arHint.classList.add('hidden');
+        });
+        
+        qrMarker.addEventListener('markerLost', () => {
+          console.log('QR-маркер потерян');
+          arHint.textContent = 'Наведите камеру на QR-код';
+          arHint.classList.remove('hidden');
+        });
 
-        // Функция для управления загрузчиком
-        function showLoading(message = 'Загрузка AR...') {
-          // Очищаем предыдущий таймаут, если он есть
-          if (loadingTimeout) {
-            clearTimeout(loadingTimeout);
-          }
-          
-          // Показываем загрузчик с указанным сообщением
-          loading.textContent = message;
-          loading.classList.remove('hidden');
-          
-          // Устанавливаем таймаут для автоматического скрытия загрузчика
-          loadingTimeout = setTimeout(() => {
-            console.warn('Таймаут загрузки, скрываем индикатор');
-            loading.classList.add('hidden');
-          }, LOADING_TIMEOUT);
-        }
-
-        function hideLoading() {
-          if (loadingTimeout) {
-            clearTimeout(loadingTimeout);
-            loadingTimeout = null;
-          }
-          loading.classList.add('hidden');
-        }
-
-        // Коррекция ориентации моделей в зависимости от их типа
-        function getModelCorrection(modelPath) {
-          if (modelPath.includes('cat.glb')) {
-            return {
-              rotation: "0 0 0",
-              position: "0 -0.2 0",
-              scale: "1.5 1.5 1.5"
-            };
-          } else if (modelPath.includes('model.glb')) {
-            return {
-              rotation: "0 0 0",
-              position: "0 -0.2 0",
-              scale: "3 3 3"  // Увеличиваем размер стула вдвое (с 1.5 до 3)
-            };
-          }
-          
-          // Значения по умолчанию
-          return {
-            rotation: "0 0 0",
-            position: "0 0 0",
-            scale: "1.5 1.5 1.5"
-          };
-        }
-
-        // Функция для смены модели
-        function switchModel(modelPath) {
-          showLoading('Загрузка модели...');
-          
-          // Удаляем предыдущую модель, если она есть
-          if (currentModel && currentModel.parentNode) {
-            currentModel.parentNode.removeChild(currentModel);
-          }
-          
-          // Получаем параметры коррекции для выбранной модели
-          const correction = getModelCorrection(modelPath);
-          
-          // Создаем новую модель
-          currentModel = document.createElement('a-entity');
-          currentModel.setAttribute('gltf-model', modelPath);
-          currentModel.setAttribute('scale', correction.scale);
-          currentModel.setAttribute('position', correction.position);
-          currentModel.setAttribute('rotation', correction.rotation);
-          currentModel.setAttribute('mixin', 'spin'); // Добавляем вращение
-          
-          // Добавляем модель в контейнер
-          modelContainer.appendChild(currentModel);
-          
-          // Обработчик загрузки модели
-          currentModel.addEventListener('model-loaded', () => {
-            console.log('Модель загружена:', modelPath);
-            hideLoading();
-          });
-          
-          // Обработчик ошибки загрузки
-          currentModel.addEventListener('model-error', () => {
-            console.error('Ошибка загрузки модели:', modelPath);
-            loading.textContent = 'Ошибка загрузки модели';
-            setTimeout(hideLoading, 3000);
-          });
-        }
-
-        // Инициализация
-        try {
-          // Предварительно принимаем все разрешения
-          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-              .then(stream => {
-                // Останавливаем поток после получения разрешения
-                stream.getTracks().forEach(track => track.stop());
-                console.log('Camera permission granted');
-              })
-              .catch(error => {
-                console.error('Error accessing camera:', error);
-              });
-          }
-          
-          // Обработчик выбора модели
-          carouselItems.forEach(item => {
-            item.addEventListener('click', () => {
-              carouselItems.forEach(i => i.classList.remove('active'));
-              item.classList.add('active');
-              
-              // Меняем модель
-              switchModel(item.dataset.model);
-              
-              // Обновляем подсказку
-              arHint.textContent = 'Наведите камеру на маркер Hiro';
-              arHint.classList.remove('hidden');
-            });
-          });
-          
-          // Проверяем, является ли устройство мобильным
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          if (!isMobile) {
-            loading.textContent = 'AR доступен только на мобильных устройствах';
-            arHint.textContent = 'AR доступен только на мобильных устройствах';
-          } else {
-            loading.classList.add('hidden');
-          }
-          
-          // Устанавливаем активную модель по умолчанию
-          if (carouselItems.length > 0) {
-            const firstItem = carouselItems[0];
-            switchModel(firstItem.dataset.model);
-          }
-          
-          // Обработка ошибок соединения
-          window.addEventListener('online', () => {
-            console.log('Соединение восстановлено');
-            // Перезагружаем текущую модель
-            const activeItem = document.querySelector('.carousel-item.active');
-            if (activeItem) {
-              switchModel(activeItem.dataset.model);
-            }
-          });
-          
-          window.addEventListener('offline', () => {
-            console.warn('Соединение потеряно');
-            arHint.textContent = 'Отсутствует подключение к интернету';
-          });
-          
-          // Обработка маркера Hiro
-          const hiroMarker = document.querySelector('#hiro-marker');
-          
-          hiroMarker.addEventListener('markerFound', () => {
-            console.log('Маркер Hiro обнаружен!');
-            arHint.classList.add('hidden');
-          });
-          
-          hiroMarker.addEventListener('markerLost', () => {
-            console.log('Маркер Hiro потерян');
-            arHint.textContent = 'Наведите камеру на маркер Hiro';
-            arHint.classList.remove('hidden');
-          });
-          
-          // Добавляем функционал свайпа между моделями
-          let startX = 0;
-          document.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-          });
-          
-          document.addEventListener('touchend', (e) => {
-            const endX = e.changedTouches[0].clientX;
-            const diff = startX - endX;
+        // Обработка выбора модели в карусели
+        carouselItems.forEach(item => {
+          item.addEventListener('click', function() {
+            // Удаляем активный класс у всех элементов
+            carouselItems.forEach(i => i.classList.remove('active'));
+            // Добавляем активный класс выбранному элементу
+            this.classList.add('active');
             
-            // Если пользователь сделал достаточно большой свайп
-            if (Math.abs(diff) > 50) {
-              const currentActive = document.querySelector('.carousel-item.active');
-              let nextItem;
-              
-              if (diff > 0) {
-                // Свайп влево - следующая модель
-                nextItem = currentActive.nextElementSibling;
-                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
-                  nextItem = document.querySelector('.carousel-item:first-child');
-                }
-              } else {
-                // Свайп вправо - предыдущая модель
-                nextItem = currentActive.previousElementSibling;
-                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
-                  nextItem = document.querySelector('.carousel-item:last-child');
-                }
+            // Получаем путь к модели
+            const modelPath = this.dataset.model;
+            
+            // Обновляем модель в AR
+            if (modelContainer) {
+              // Удаляем предыдущую модель
+              while (modelContainer.firstChild) {
+                modelContainer.removeChild(modelContainer.firstChild);
               }
               
-              // Меняем активную модель
-              carouselItems.forEach(i => i.classList.remove('active'));
-              nextItem.classList.add('active');
-              switchModel(nextItem.dataset.model);
+              // Создаем новую модель
+              const newModel = document.createElement('a-entity');
+              newModel.setAttribute('gltf-model', modelPath);
+              newModel.setAttribute('scale', '1 1 1');
+              newModel.setAttribute('position', '0 0 0');
+              newModel.setAttribute('animation-mixer', '');
+              modelContainer.appendChild(newModel);
             }
           });
-          
-        } catch (error) {
-          console.error('Ошибка инициализации:', error);
-          arHint.textContent = 'Ошибка инициализации: ' + error.message;
-          hideLoading();
-        }
+        });
+
+        // Скрываем загрузочный экран после инициализации
+        window.addEventListener('load', function() {
+          setTimeout(() => {
+            loading.classList.add('hidden');
+          }, 2000);
+        });
       });
     </script>
   </body>
