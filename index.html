@@ -268,6 +268,7 @@
         let isMarkerVisible = false;
         let lastMarkerPosition = null;
         let lastMarkerRotation = null;
+        let lastActiveMarker = null;
         
         // Wyłączamy okna dialogowe AR.js
         if (window.AR && window.AR.context) {
@@ -324,6 +325,14 @@
             position: "0 0 0",
             scale: "1.5 1.5 1.5"
           };
+        }
+
+        // Funkcja do aktualizacji pozycji modelu
+        function updateModelPosition(position, rotation) {
+          if (modelWrapper) {
+            modelWrapper.setAttribute('position', position);
+            modelWrapper.setAttribute('rotation', rotation);
+          }
         }
 
         // Funkcja do zmiany modelu
@@ -421,54 +430,61 @@
             arHint.textContent = 'Brak połączenia z internetem';
           });
           
-          // Obsługa markera Hiro
-          const hiroMarker = document.querySelector('#hiro-marker');
+          // Obsługa wszystkich markerów
+          const markers = document.querySelectorAll('a-marker');
           
-          hiroMarker.addEventListener('markerFound', () => {
-            console.log('Marker Hiro wykryty!');
-            isMarkerVisible = true;
-            wasMarkerSeen = true;
-            arHint.classList.add('hidden');
+          markers.forEach(marker => {
+            marker.addEventListener('markerFound', () => {
+              console.log('Marker wykryty:', marker.id);
+              isMarkerVisible = true;
+              wasMarkerSeen = true;
+              lastActiveMarker = marker;
+              arHint.classList.add('hidden');
+              
+              // Aktualizujemy ostatnią znaną pozycję i rotację
+              const markerPosition = marker.object3D.position;
+              const markerRotation = marker.object3D.rotation;
+              
+              lastMarkerPosition = {
+                x: markerPosition.x,
+                y: markerPosition.y,
+                z: markerPosition.z
+              };
+              
+              lastMarkerRotation = {
+                x: markerRotation.x,
+                y: markerRotation.y,
+                z: markerRotation.z
+              };
+              
+              // Aktualizujemy pozycję modelu
+              updateModelPosition(lastMarkerPosition, lastMarkerRotation);
+            });
             
-            // Aktualizujemy ostatnią znaną pozycję i rotację
-            const markerPosition = hiroMarker.object3D.position;
-            const markerRotation = hiroMarker.object3D.rotation;
-            
-            lastMarkerPosition = {
-              x: markerPosition.x,
-              y: markerPosition.y,
-              z: markerPosition.z
-            };
-            
-            lastMarkerRotation = {
-              x: markerRotation.x,
-              y: markerRotation.y,
-              z: markerRotation.z
-            };
-            
-            // Aktualizujemy pozycję modelu
-            updateModelPosition(lastMarkerPosition, lastMarkerRotation);
+            marker.addEventListener('markerLost', () => {
+              console.log('Marker utracony:', marker.id);
+              
+              // Jeśli to był ostatni aktywny marker
+              if (lastActiveMarker === marker) {
+                isMarkerVisible = false;
+                
+                if (wasMarkerSeen) {
+                  // Zachowujemy model na miejscu
+                  arHint.textContent = 'Skieruj kamerę na marker, aby zaktualizować pozycję';
+                  arHint.classList.remove('hidden');
+                } else {
+                  arHint.textContent = 'Skieruj kamerę na marker';
+                  arHint.classList.remove('hidden');
+                }
+              }
+            });
           });
           
-          hiroMarker.addEventListener('markerLost', () => {
-            console.log('Marker Hiro utracony');
-            isMarkerVisible = false;
-            
-            if (wasMarkerSeen) {
-              // Jeśli marker był już widziany, zachowujemy model na miejscu
-              arHint.textContent = 'Skieruj kamerę na marker Hiro, aby zaktualizować pozycję';
-              arHint.classList.remove('hidden');
-            } else {
-              arHint.textContent = 'Skieruj kamerę na marker Hiro';
-              arHint.classList.remove('hidden');
-            }
-          });
-
           // Funkcja do aktualizacji pozycji modelu w czasie rzeczywistym
           function updateModelPositionInRealTime() {
-            if (isMarkerVisible && hiroMarker) {
-              const markerPosition = hiroMarker.object3D.position;
-              const markerRotation = hiroMarker.object3D.rotation;
+            if (isMarkerVisible && lastActiveMarker) {
+              const markerPosition = lastActiveMarker.object3D.position;
+              const markerRotation = lastActiveMarker.object3D.rotation;
               
               lastMarkerPosition = {
                 x: markerPosition.x,
