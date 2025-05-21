@@ -326,8 +326,6 @@
 
         // Funkcja do zmiany modelu
         function switchModel(modelPath) {
-          showLoading('Ładowanie modelu...');
-          
           // Usuwamy poprzedni model, jeśli istnieje
           if (currentModel && currentModel.parentNode) {
             currentModel.parentNode.removeChild(currentModel);
@@ -350,7 +348,6 @@
           // Obsługa ładowania modelu
           currentModel.addEventListener('model-loaded', () => {
             console.log('Model załadowany:', modelPath);
-            hideLoading();
           });
           
           // Obsługa błędu ładowania
