@@ -255,6 +255,46 @@
       const loadingText = document.getElementById('loading-text');
       const markerStatus = document.getElementById('marker-status');
 
+      // Funkcja do zarządzania ładowaniem
+      function showLoading(message = 'Ładowanie modelu...') {
+        loadingText.textContent = message;
+        loadingScreen.classList.remove('hidden');
+      }
+
+      function hideLoading() {
+        loadingScreen.classList.add('hidden');
+      }
+
+      // Korekta orientacji modeli w zależności od ich typu
+      function getModelCorrection(modelPath) {
+        if (modelPath.includes('cat.glb')) {
+          return {
+            rotation: "0 0 0",
+            position: "0 -0.2 0",
+            scale: "1.5 1.5 1.5"
+          };
+        } else if (modelPath.includes('model.glb')) {
+          return {
+            rotation: "0 0 0",
+            position: "0 -0.2 0",
+            scale: "3 3 3"
+          };
+        } else if (modelPath.includes('chair.glb')) {
+          return {
+            rotation: "0 0 0",
+            position: "0 -0.2 0",
+            scale: "2 2 2"
+          };
+        }
+        
+        // Wartości domyślne
+        return {
+          rotation: "0 0 0",
+          position: "0 0 0",
+          scale: "1.5 1.5 1.5"
+        };
+      }
+
       // Funkcja do przełączania modeli
       function switchToIndex(index) {
         if (index < 0) index = models.length - 1;
@@ -275,6 +315,8 @@
 
       // Funkcja do przełączania modeli
       function switchModel(modelPath) {
+        showLoading('Ładowanie modelu...');
+        
         // Usuwamy poprzedni model, jeśli istnieje
         if (currentModel && currentModel.parentNode) {
           currentModel.parentNode.removeChild(currentModel);
@@ -298,12 +340,13 @@
         // Obsługa ładowania modelu
         currentModel.addEventListener('model-loaded', () => {
           console.log('Model załadowany:', modelPath);
+          hideLoading();
         });
         
         // Obsługa błędu ładowania
         currentModel.addEventListener('model-error', () => {
           console.error('Błąd ładowania modelu:', modelPath);
-          loadingScreen.textContent = 'Błąd ładowania modelu';
+          loadingText.textContent = 'Błąd ładowania modelu';
           setTimeout(hideLoading, 3000);
         });
       }
