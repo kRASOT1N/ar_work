@@ -194,32 +194,34 @@
         <!-- Przyciski AR -->
         <a-entity position="0 0.75 0">
           <!-- Przycisk strony internetowej -->
-          <a-plane 
+          <a-box 
             id="website-button" 
             position="1.2 0 0" 
             rotation="0 0 0" 
-            width="0.5" 
-            height="0.5" 
-            material="src: site.png; transparent: true;"
+            width="0.8" 
+            height="0.8" 
+            depth="0.1"
+            material="opacity: 0.0; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
-          ></a-plane>
+          ></a-box>
           
           <!-- Przycisk email -->
-          <a-plane 
+          <a-box 
             id="email-button" 
             position="-1.2 0 0" 
             rotation="0 0 0" 
-            width="0.5" 
-            height="0.5" 
-            material="src: em.png; transparent: true;"
+            width="0.8" 
+            height="0.8" 
+            depth="0.1"
+            material="opacity: 0.0; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
-          ></a-plane>
+          ></a-box>
         </a-entity>
       </a-marker>
       
