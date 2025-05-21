@@ -164,7 +164,7 @@
     >
       <!-- Komponent do obrotu -->
       <a-assets>
-        <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 20000; easing: easeInOutQuad"></a-mixin>
+        <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
     
       <!-- Marker Hiro -->
@@ -194,34 +194,32 @@
         <!-- Przyciski AR -->
         <a-entity position="0 0.75 0">
           <!-- Przycisk strony internetowej -->
-          <a-box 
+          <a-plane 
             id="website-button" 
             position="1.2 0 0" 
             rotation="0 0 0" 
-            width="0.8" 
-            height="0.8" 
-            depth="0.1"
-            material="opacity: 0.0; transparent: true;"
+            width="0.5" 
+            height="0.5" 
+            material="src: site.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
-          ></a-box>
+          ></a-plane>
           
           <!-- Przycisk email -->
-          <a-box 
+          <a-plane 
             id="email-button" 
             position="-1.2 0 0" 
             rotation="0 0 0" 
-            width="0.8" 
-            height="0.8" 
-            depth="0.1"
-            material="opacity: 0.0; transparent: true;"
+            width="0.5" 
+            height="0.5" 
+            material="src: em.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
-          ></a-box>
+          ></a-plane>
         </a-entity>
       </a-marker>
       
