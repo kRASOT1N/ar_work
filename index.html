@@ -261,6 +261,13 @@
         const arHint = document.querySelector('#ar-hint');
         const carouselItems = document.querySelectorAll('.carousel-item');
         const modelContainer = document.querySelector('#model-container');
+        const modelWrapper = document.querySelector('#model-wrapper');
+        
+        // Flagi do śledzenia stanu markera
+        let wasMarkerSeen = false;
+        let isMarkerVisible = false;
+        let lastMarkerPosition = null;
+        let lastMarkerRotation = null;
         
         // Wyłączamy okna dialogowe AR.js
         if (window.AR && window.AR.context) {
@@ -276,16 +283,11 @@
 
         // Funkcja do zarządzania ładowaniem
         function showLoading(message = 'Ładowanie AR...') {
-          // Czyścimy poprzedni timeout, jeśli istnieje
           if (loadingTimeout) {
             clearTimeout(loadingTimeout);
           }
-          
-          // Pokazujemy loader z podanym komunikatem
           loading.textContent = message;
           loading.classList.remove('hidden');
-          
-          // Ustawiamy timeout do automatycznego ukrycia loadera
           loadingTimeout = setTimeout(() => {
             console.warn('Timeout ładowania, ukrywamy wskaźnik');
             loading.classList.add('hidden');
@@ -326,31 +328,25 @@
 
         // Funkcja do zmiany modelu
         function switchModel(modelPath) {
-          // Usuwamy poprzedni model, jeśli istnieje
           if (currentModel && currentModel.parentNode) {
             currentModel.parentNode.removeChild(currentModel);
           }
           
-          // Pobieramy parametry korekty dla wybranego modelu
           const correction = getModelCorrection(modelPath);
           
-          // Tworzymy nowy model
           currentModel = document.createElement('a-entity');
           currentModel.setAttribute('gltf-model', modelPath);
           currentModel.setAttribute('scale', correction.scale);
           currentModel.setAttribute('position', correction.position);
           currentModel.setAttribute('rotation', correction.rotation);
-          currentModel.setAttribute('mixin', 'spin'); // Dodajemy obrót
+          currentModel.setAttribute('mixin', 'spin');
           
-          // Dodajemy model do kontenera
           modelContainer.appendChild(currentModel);
           
-          // Obsługa ładowania modelu
           currentModel.addEventListener('model-loaded', () => {
             console.log('Model załadowany:', modelPath);
           });
           
-          // Obsługa błędu ładowania
           currentModel.addEventListener('model-error', () => {
             console.error('Błąd ładowania modelu:', modelPath);
             loading.textContent = 'Błąd ładowania modelu';
@@ -430,50 +426,68 @@
           
           hiroMarker.addEventListener('markerFound', () => {
             console.log('Marker Hiro wykryty!');
+            isMarkerVisible = true;
+            wasMarkerSeen = true;
             arHint.classList.add('hidden');
+            
+            // Aktualizujemy ostatnią znaną pozycję i rotację
+            const markerPosition = hiroMarker.object3D.position;
+            const markerRotation = hiroMarker.object3D.rotation;
+            
+            lastMarkerPosition = {
+              x: markerPosition.x,
+              y: markerPosition.y,
+              z: markerPosition.z
+            };
+            
+            lastMarkerRotation = {
+              x: markerRotation.x,
+              y: markerRotation.y,
+              z: markerRotation.z
+            };
+            
+            // Aktualizujemy pozycję modelu
+            updateModelPosition(lastMarkerPosition, lastMarkerRotation);
           });
           
           hiroMarker.addEventListener('markerLost', () => {
             console.log('Marker Hiro utracony');
-            arHint.textContent = 'Skieruj kamerę na marker Hiro';
-            arHint.classList.remove('hidden');
-          });
-          
-          // Dodajemy funkcjonalność przesuwania między modelami
-          let startX = 0;
-          document.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-          });
-          
-          document.addEventListener('touchend', (e) => {
-            const endX = e.changedTouches[0].clientX;
-            const diff = startX - endX;
+            isMarkerVisible = false;
             
-            // Jeśli użytkownik wykonał wystarczająco duży przesuw
-            if (Math.abs(diff) > 50) {
-              const currentActive = document.querySelector('.carousel-item.active');
-              let nextItem;
-              
-              if (diff > 0) {
-                // Przesuw w lewo - następny model
-                nextItem = currentActive.nextElementSibling;
-                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
-                  nextItem = document.querySelector('.carousel-item:first-child');
-                }
-              } else {
-                // Przesuw w prawo - poprzedni model
-                nextItem = currentActive.previousElementSibling;
-                if (!nextItem || !nextItem.classList.contains('carousel-item')) {
-                  nextItem = document.querySelector('.carousel-item:last-child');
-                }
-              }
-              
-              // Zmieniamy aktywny model
-              carouselItems.forEach(i => i.classList.remove('active'));
-              nextItem.classList.add('active');
-              switchModel(nextItem.dataset.model);
+            if (wasMarkerSeen) {
+              // Jeśli marker był już widziany, zachowujemy model na miejscu
+              arHint.textContent = 'Skieruj kamerę na marker Hiro, aby zaktualizować pozycję';
+              arHint.classList.remove('hidden');
+            } else {
+              arHint.textContent = 'Skieruj kamerę na marker Hiro';
+              arHint.classList.remove('hidden');
             }
           });
+
+          // Funkcja do aktualizacji pozycji modelu w czasie rzeczywistym
+          function updateModelPositionInRealTime() {
+            if (isMarkerVisible && hiroMarker) {
+              const markerPosition = hiroMarker.object3D.position;
+              const markerRotation = hiroMarker.object3D.rotation;
+              
+              lastMarkerPosition = {
+                x: markerPosition.x,
+                y: markerPosition.y,
+                z: markerPosition.z
+              };
+              
+              lastMarkerRotation = {
+                x: markerRotation.x,
+                y: markerRotation.y,
+                z: markerRotation.z
+              };
+              
+              updateModelPosition(lastMarkerPosition, lastMarkerRotation);
+            }
+          }
+
+          // Dodajemy pętlę aktualizacji pozycji
+          setInterval(updateModelPositionInRealTime, 100);
           
         } catch (error) {
           console.error('Błąd inicjalizacji:', error);
