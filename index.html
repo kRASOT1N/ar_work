@@ -176,7 +176,7 @@
         smoothCount="10" 
         smoothTolerance="0.01" 
         smoothThreshold="2"
-        minConfidence="0.15"
+        minConfidence="0.1"
         raycaster="objects: .clickable"
         emitevents="true"
         id="marker"
@@ -233,14 +233,14 @@
     <div class="carousel-container">
       <div class="carousel">
         <div class="carousel-item active" data-model="models/cat.glb" data-usdz="models/cat.usdz">
-          <a-scene embedded style="width:100px;height:100px;" vr-mode-ui="enabled: false">
+          <a-scene embedded style="width:100px;height:100px;pointer-events:none;" vr-mode-ui="enabled: false">
             <a-entity gltf-model="models/cat.glb" position="0 0 -2" scale="1 1 1" rotation="0 45 0"></a-entity>
             <a-entity light="type: ambient; intensity: 1"></a-entity>
             <a-camera position="0 0 2"></a-camera>
           </a-scene>
         </div>
         <div class="carousel-item" data-model="models/model.glb" data-usdz="models/model.usdz">
-          <a-scene embedded style="width:100px;height:100px;" vr-mode-ui="enabled: false">
+          <a-scene embedded style="width:100px;height:100px;pointer-events:none;" vr-mode-ui="enabled: false">
             <a-entity gltf-model="models/model.glb" position="0 0 -2" scale="1 1 1" rotation="0 45 0"></a-entity>
             <a-entity light="type: ambient; intensity: 1"></a-entity>
             <a-camera position="0 0 2"></a-camera>
