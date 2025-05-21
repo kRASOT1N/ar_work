@@ -183,7 +183,12 @@
       >
         <!-- Kontener modelu z obrotem -->
         <a-entity id="model-wrapper" position="0 0.75 0">
-          <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
+          <a-entity 
+            id="model-container" 
+            rotation="0 0 0" 
+            scale="1 1 1"
+            look-at="[camera]"
+          ></a-entity>
         </a-entity>
         
         <!-- Przyciski AR -->
@@ -198,6 +203,8 @@
             material="src: site.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
+            animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
+            animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
           ></a-plane>
           
           <!-- Przycisk email -->
@@ -210,6 +217,8 @@
             material="src: em.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
+            animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
+            animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
           ></a-plane>
         </a-entity>
       </a-marker>
@@ -265,6 +274,22 @@
               console.log('Email button clicked');
             }
           });
+        }
+      });
+      
+      // Komponent do kontroli orientacji modelu
+      AFRAME.registerComponent('model-orientation', {
+        init: function() {
+          this.el.addEventListener('model-loaded', () => {
+            // Ustawiamy początkową orientację
+            this.el.object3D.rotation.x = 0;
+            this.el.object3D.rotation.z = 0;
+          });
+        },
+        tick: function() {
+          // Utrzymujemy model w pionie
+          this.el.object3D.rotation.x = 0;
+          this.el.object3D.rotation.z = 0;
         }
       });
       
@@ -353,6 +378,7 @@
           currentModel.setAttribute('position', correction.position);
           currentModel.setAttribute('rotation', correction.rotation);
           currentModel.setAttribute('mixin', 'spin'); // Dodajemy obrót
+          currentModel.setAttribute('model-orientation', ''); // Dodajemy kontrolę orientacji
           
           // Dodajemy model do kontenera
           modelContainer.appendChild(currentModel);
