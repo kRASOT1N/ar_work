@@ -297,12 +297,22 @@
 
       // Funkcja do przełączania modeli
       function switchToIndex(index) {
-        if (index < 0) index = models.length - 1;
-        if (index >= models.length) index = 0;
+        // Zabezpieczenie przed nieprawidłowymi indeksami
+        if (index < 0) {
+          currentIndex = models.length - 1;
+        } else if (index >= models.length) {
+          currentIndex = 0;
+        } else {
+          currentIndex = index;
+        }
 
-        currentIndex = index;
         const selectedModel = models[currentIndex];
-        switchModel(selectedModel.glb);
+        if (selectedModel && selectedModel.glb) {
+          switchModel(selectedModel.glb);
+        } else {
+          console.error('Nieprawidłowy model:', selectedModel);
+          return;
+        }
 
         // Aktualizujemy status markera
         const hiroMarker = document.querySelector('#hiro-marker');
@@ -315,6 +325,11 @@
 
       // Funkcja do przełączania modeli
       function switchModel(modelPath) {
+        if (!modelPath) {
+          console.error('Brak ścieżki do modelu');
+          return;
+        }
+
         showLoading('Ładowanie modelu...');
         
         // Usuwamy poprzedni model, jeśli istnieje
