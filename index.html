@@ -196,6 +196,7 @@
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
+            website-link="url: https://www.alphawood.store"
           ></a-plane>
           
           <!-- Przycisk email -->
@@ -210,6 +211,7 @@
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
+            email-link="address: info@alphawood.store"
           ></a-plane>
         </a-entity>
       </a-marker>
@@ -221,21 +223,40 @@
     </a-scene>
 
     <script>
-      // Rejestrujemy komponent do obsługi kliknięć
+      // Komponent do obsługi linków do stron internetowych
+      AFRAME.registerComponent('website-link', {
+        schema: {
+          url: {type: 'string'}
+        },
+        init: function() {
+          this.el.addEventListener('click', () => {
+            console.log('Opening website:', this.data.url);
+            window.open(this.data.url, '_blank');
+          });
+        }
+      });
+
+      // Komponent do obsługi linków email
+      AFRAME.registerComponent('email-link', {
+        schema: {
+          address: {type: 'string'}
+        },
+        init: function() {
+          this.el.addEventListener('click', () => {
+            console.log('Opening email:', this.data.address);
+            window.location.href = `mailto:${this.data.address}`;
+          });
+        }
+      });
+
+      // Dodatkowy komponent do debugowania kliknięć
       AFRAME.registerComponent('clickable', {
         init: function() {
           const el = this.el;
           
-          el.addEventListener('click', function() {
-            const id = el.id;
-            
-            if (id === 'website-button') {
-              window.open('https://www.alphawood.store', '_blank');
-              console.log('Kliknięto przycisk strony internetowej');
-            } else if (id === 'email-button') {
-              window.location.href = 'mailto:info@alphawood.store';
-              console.log('Email button clicked');
-            }
+          el.addEventListener('click', function(evt) {
+            console.log('Element clicked:', el.id);
+            console.log('Click event:', evt);
           });
         }
       });
