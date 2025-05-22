@@ -253,12 +253,11 @@
           // Pobieramy orientację markera
           const marker = document.querySelector('a-marker');
           if (marker && marker.object3D) {
-            // Kopiujemy rotację Y z markera (obrót wokół osi Y)
+            // Kopiujemy rotację z markera
+            this.el.object3D.rotation.x = marker.object3D.rotation.x;
             this.el.object3D.rotation.y = marker.object3D.rotation.y;
+            this.el.object3D.rotation.z = marker.object3D.rotation.z;
           }
-          // Utrzymujemy model w pionie
-          this.el.object3D.rotation.x = 0;
-          this.el.object3D.rotation.z = 0;
         }
       });
 
@@ -302,14 +301,14 @@
         { 
           glb: 'models/cat.glb', 
           usdz: 'models/cat.usdz',
-          scale: "30 30 30",
+          scale: "60 60 60",
           position: "0 -0.2 0",
           rotation: "0 0 0"
         },
         { 
           glb: 'models/model.glb', 
           usdz: 'models/model.usdz',
-          scale: "40 40 40",
+          scale: "80 80 80",
           position: "0 -0.2 0",
           rotation: "0 0 0"
         }
