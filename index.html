@@ -8,140 +8,53 @@
     <meta name="apple-touch-fullscreen" content="yes">
     <title>Przeglądarka AR</title>
     
-    <!-- Biblioteki AR.js i A-Frame -->
+    <!-- A-Frame и AR.js -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     
-    <!-- Skrypt do wyłączania okien dialogowych AR.js -->
-    <script>
-      // Wyłączamy okna dialogowe AR.js
-      window.addEventListener('load', function() {
-        // Wyłączamy prośbę o zgodę na użycie AR
-        if (window.ARjs && window.ARjs.Utils) {
-          window.ARjs.Utils.displayResolutionPrompt = function() {};
-        }
-        
-        // Nadpisujemy standardowy confirm
-        const originalConfirm = window.confirm;
-        window.confirm = function(message) {
-          console.log('Okno potwierdzenia pominięte:', message);
-          return true; // Zawsze zwracamy true, jakby użytkownik kliknął "OK"
-        };
-        
-        // Nadpisujemy standardowy prompt
-        const originalPrompt = window.prompt;
-        window.prompt = function(message, defaultValue) {
-          console.log('Okno wprowadzania pominięte:', message);
-          return defaultValue; // Zwracamy wartość domyślną
-        };
-      });
-    </script>
-    
     <style>
-      body {
-        margin: 0;
-        padding: 0;
-        background-color: #000;
-        color: white;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        height: 100vh;
-        overflow: hidden;
+      body, html {
+        margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+        background-color: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
-
       #loading-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); display: flex;
+        flex-direction: column; justify-content: center; align-items: center;
         z-index: 9999;
-        color: white;
       }
-
-      #loading-screen.hidden {
-        display: none;
-      }
-
-      #loading-text {
-        margin-top: 20px;
-        font-size: 18px;
-      }
-
+      #loading-screen.hidden { display: none; }
+      #loading-text { font-size: 18px; margin-top: 10px; }
       #marker-status {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(0, 0, 0, 0.7);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 20px;
-        font-size: 16px;
-        z-index: 1000;
-        display: none;
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 20px;
+        font-size: 16px; z-index: 1000; display: none;
       }
-
       .model-nav-buttons {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1000;
-        display: flex;
-        gap: 30px;
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        display: flex; gap: 30px; z-index: 1000;
       }
-
       .nav-button {
-        width: 60px;
-        height: 60px;
-        cursor: pointer;
+        width: 60px; height: 60px; cursor: pointer;
         transition: transform 0.2s;
       }
-
-      .nav-button:hover {
-        transform: scale(1.1);
-      }
-
-      .nav-button:active {
-        transform: scale(0.95);
-      }
-
-      /* Ukrywamy standardowy interfejs AR.js */
-      .a-enter-vr {
-        display: none !important;
-      }
-
-      .button {
-        position: absolute;
-        background-color: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background-color 0.3s;
-        z-index: 1000;
-        width: 80px;
-        height: 32px;
-      }
+      .nav-button:hover { transform: scale(1.1); }
+      .nav-button:active { transform: scale(0.95); }
+      .a-enter-vr { display: none !important; }
     </style>
   </head>
   <body>
+    <!-- Экран загрузки -->
     <div id="loading-screen">
       <div class="spinner"></div>
       <div id="loading-text">Ładowanie modelu...</div>
     </div>
-    
+
+    <!-- Статус маркера -->
     <div id="marker-status">Nakieruj kamerę na marker Hiro</div>
-    
-    <!-- Przyciski nawigacji -->
+
+    <!-- Кнопки навигации между моделями -->
     <div class="model-nav-buttons">
       <img id="btn-left" src="L.png" class="nav-button" alt="Poprzedni model">
       <img id="btn-right" src="R.png" class="nav-button" alt="Następny model">
@@ -149,61 +62,54 @@
 
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
     >
-      <!-- Komponent do obrotu -->
       <a-assets>
+        <!-- опциональный спин для моделей -->
         <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
-    
-      <!-- Marker Hiro -->
-      <a-marker 
-        id="hiro-marker" 
-        type="pattern" 
-        preset="hiro" 
-        smooth="true" 
-        smoothCount="10" 
-        smoothTolerance="0.01" 
-        smoothThreshold="2"
+
+      <!-- Hiro-маркер -->
+      <a-marker
+        id="hiro-marker"
+        type="pattern" preset="hiro"
+        smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="2"
         minConfidence="0.15"
         raycaster="objects: .clickable"
         emitevents="true"
-        id="marker"
       >
-        <!-- Kontener modelu z obrotem -->
-        <a-entity id="model-wrapper" position="0 0.75 0">
-          <a-entity 
-            id="model-container" 
-            rotation="0 0 0" 
+        <!-- Контейнер модели: теперь на 0 0 0 -->
+        <a-entity id="model-wrapper" position="0 0 0">
+          <a-entity
+            id="model-container"
+            rotation="0 0 0"
             scale="1 1 1"
+            center-pivot
+            model-orientation
+            model-stabilizer
           ></a-entity>
         </a-entity>
-        
-        <!-- Przyciski AR -->
+
+        <!-- Кнопки внутри сцены (ссылки) -->
         <a-entity position="0 0.75 0">
-          <!-- Przycisk strony internetowej -->
-          <a-plane 
-            id="website-button" 
-            position="1.2 0 0" 
-            rotation="0 0 0" 
-            width="0.5" 
-            height="0.5" 
+          <a-plane
+            id="website-button"
+            position="1.2 0 0"
+            rotation="0 0 0"
+            width="0.5" height="0.5"
             material="src: site.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
           ></a-plane>
-          
-          <!-- Przycisk email -->
-          <a-plane 
-            id="email-button" 
-            position="-1.2 0 0" 
-            rotation="0 0 0" 
-            width="0.5" 
-            height="0.5" 
+          <a-plane
+            id="email-button"
+            position="-1.2 0 0"
+            rotation="0 0 0"
+            width="0.5" height="0.5"
             material="src: em.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
@@ -212,230 +118,131 @@
           ></a-plane>
         </a-entity>
       </a-marker>
-      
-      <!-- Kamera z kursorem do interakcji -->
+
+      <!-- Камера и курсор -->
       <a-entity camera>
         <a-cursor raycaster="objects: .clickable"></a-cursor>
       </a-entity>
     </a-scene>
 
     <script>
-      // Rejestrujemy komponent do obsługi kliknięć
-      AFRAME.registerComponent('clickable', {
-        init: function() {
-          const el = this.el;
-          
-          el.addEventListener('click', function() {
-            const id = el.id;
-            
-            if (id === 'website-button') {
-              window.open('https://www.alphawood.store', '_blank');
-              console.log('Kliknięto przycisk strony internetowej');
-            } else if (id === 'email-button') {
-              window.location.href = 'mailto:info@alphawood.store';
-              console.log('Email button clicked');
-            }
-          });
-        }
+      // Отключаем стандартные диалоги AR.js
+      window.addEventListener('load', () => {
+        if (window.ARjs && window.ARjs.Utils) window.ARjs.Utils.displayResolutionPrompt = () => {};
+        window.confirm = () => true;
+        window.prompt  = (_m, d) => d;
       });
-      
-      // Komponent do kontroli orientacji modelu
-      AFRAME.registerComponent('model-orientation', {
+
+      // Центрируем pivot модели по её геометрии
+      AFRAME.registerComponent('center-pivot', {
         init: function() {
           this.el.addEventListener('model-loaded', () => {
-            // Inicjalizacja komponentu
+            const obj = this.el.getObject3D('mesh') || this.el.getObject3D('scene');
+            if (!obj) return;
+            const box = new THREE.Box3().setFromObject(obj);
+            const center = box.getCenter(new THREE.Vector3());
+            this.el.object3D.position.y -= center.y;
           });
-        },
+        }
+      });
+
+      // Повторяем всю ориентацию маркера (без ограничений)
+      AFRAME.registerComponent('model-orientation', {
         tick: function() {
-          // Pobieramy orientację markera
-          const marker = document.querySelector('a-marker');
-          if (marker && marker.object3D) {
-            // Kopiujemy pełną rotację z markera
+          const marker = document.querySelector('#hiro-marker');
+          if (marker && marker.object3D.visible) {
             this.el.object3D.quaternion.copy(marker.object3D.quaternion);
-            
-            // Opcjonalne ograniczenie kąta nachylenia (np. ±80 stopni)
-            const rotation = this.el.object3D.rotation;
-            if (rotation.x > Math.PI * 0.44) rotation.x = Math.PI * 0.44;
-            if (rotation.x < -Math.PI * 0.44) rotation.x = -Math.PI * 0.44;
           }
         }
       });
 
-      // Komponent do stabilizacji modelu
+      // Простая стабилизация позиции
       AFRAME.registerComponent('model-stabilizer', {
         init: function() {
-          this.lastPosition = new THREE.Vector3();
-          this.smoothFactor = 0.3; // Współczynnik wygładzania (0-1)
+          this.lastPos = new THREE.Vector3();
+          this.factor  = 0.3;
         },
         tick: function() {
-          const currentPosition = this.el.object3D.position;
-          
-          // Wyliczamy wygładzoną pozycję
-          currentPosition.x = this.lastPosition.x + (currentPosition.x - this.lastPosition.x) * this.smoothFactor;
-          currentPosition.y = this.lastPosition.y + (currentPosition.y - this.lastPosition.y) * this.smoothFactor;
-          currentPosition.z = this.lastPosition.z + (currentPosition.z - this.lastPosition.z) * this.smoothFactor;
-          
-          // Aktualizujemy ostatnią pozycję
-          this.lastPosition.copy(currentPosition);
+          const pos = this.el.object3D.position;
+          pos.lerp(this.lastPos, 1 - this.factor);
+          this.lastPos.copy(pos);
         }
       });
-      
-      // Lista modeli
-      const models = [
-        { 
-          glb: 'models/cat.glb', 
-          usdz: 'models/cat.usdz',
-          scale: "3 3 3",
-          position: "0 0 0",
-          rotation: "0 0 0"
-        },
-        { 
-          glb: 'models/model.glb', 
-          usdz: 'models/model.usdz',
-          scale: "3 3 3",
-          position: "0 0 0",
-          rotation: "0 0 0"
-        }
-      ];
-      
-      let currentIndex = 0;
-      let currentModel = null;
-      const modelContainer = document.querySelector('#model-container');
-      const loadingScreen = document.getElementById('loading-screen');
-      const loadingText = document.getElementById('loading-text');
-      const markerStatus = document.getElementById('marker-status');
 
-      // Funkcja do zarządzania ładowaniem
-      function showLoading(message = 'Ładowanie modelu...') {
-        loadingText.textContent = message;
-        loadingScreen.classList.remove('hidden');
-      }
-
-      function hideLoading() {
-        loadingScreen.classList.add('hidden');
-      }
-
-      // Funkcja do przełączania modeli
-      function switchModel(modelPath, isInitialLoad = false) {
-        if (!modelPath) {
-          console.error('Brak ścieżki do modelu');
-          return;
-        }
-
-        if (isInitialLoad) {
-          showLoading('Ładowanie modelu...');
-        }
-        
-        // Usuwamy poprzedni model, jeśli istnieje
-        if (currentModel && currentModel.parentNode) {
-          currentModel.parentNode.removeChild(currentModel);
-        }
-        
-        // Znajdujemy konfigurację modelu
-        const modelConfig = models.find(m => m.glb === modelPath) || {
-          scale: "1.5 1.5 1.5",
-          position: "0 0 0",
-          rotation: "0 0 0"
-        };
-        
-        // Tworzymy nowy model
-        currentModel = document.createElement('a-entity');
-        currentModel.setAttribute('gltf-model', modelPath);
-        currentModel.setAttribute('scale', modelConfig.scale);
-        currentModel.setAttribute('position', modelConfig.position);
-        currentModel.setAttribute('rotation', modelConfig.rotation);
-        currentModel.setAttribute('mixin', 'spin');
-        currentModel.setAttribute('model-orientation', '');
-        currentModel.setAttribute('model-stabilizer', '');
-        
-        // Dodajemy model do kontenera
-        modelContainer.appendChild(currentModel);
-        
-        // Obsługa ładowania modelu
-        currentModel.addEventListener('model-loaded', () => {
-          console.log('Model załadowany:', modelPath);
-          if (isInitialLoad) {
-            hideLoading();
-          }
-        });
-        
-        // Obsługa błędu ładowania
-        currentModel.addEventListener('model-error', () => {
-          console.error('Błąd ładowania modelu:', modelPath);
-          if (isInitialLoad) {
-            loadingText.textContent = 'Błąd ładowania modelu';
-            setTimeout(hideLoading, 3000);
-          }
-        });
-      }
-
-      // Funkcja do przełączania modeli
-      function switchToIndex(index) {
-        // Zabezpieczenie przed nieprawidłowymi indeksami
-        if (index < 0) {
-          currentIndex = models.length - 1;
-        } else if (index >= models.length) {
-          currentIndex = 0;
-        } else {
-          currentIndex = index;
-        }
-
-        const selectedModel = models[currentIndex];
-        if (selectedModel && selectedModel.glb) {
-          switchModel(selectedModel.glb, false);
-        } else {
-          console.error('Nieprawidłowy model:', selectedModel);
-          return;
-        }
-
-        // Aktualizujemy status markera
-        const hiroMarker = document.querySelector('#hiro-marker');
-        if (hiroMarker && hiroMarker.object3D.visible) {
-          markerStatus.style.display = 'none';
-        } else {
-          markerStatus.style.display = 'block';
-        }
-      }
-
-      // Obsługa przycisków nawigacji
-      document.querySelector('#btn-left').addEventListener('click', () => {
-        switchToIndex(currentIndex - 1);
-      });
-
-      document.querySelector('#btn-right').addEventListener('click', () => {
-        switchToIndex(currentIndex + 1);
-      });
-
-      // Inicjalizacja pierwszego modelu
-      document.addEventListener('DOMContentLoaded', async function() {
-        try {
-          // Sprawdzamy dostępność WebXR
-          if ('xr' in navigator) {
-            const isSupported = await navigator.xr.isSessionSupported('immersive-ar');
-            if (!isSupported) {
-              console.log('AR nie jest wspierane na tym urządzeniu');
-              return;
+      // Обработка кликов по ссылкам
+      AFRAME.registerComponent('clickable', {
+        init: function() {
+          this.el.addEventListener('click', () => {
+            if (this.el.id === 'website-button') {
+              window.open('https://www.alphawood.store', '_blank');
             }
-          }
-
-          // Ładujemy pierwszy model
-          const firstModel = models[0];
-          if (firstModel && firstModel.glb) {
-            switchModel(firstModel.glb, true);
-          }
-        } catch (error) {
-          console.error('Błąd podczas inicjalizacji:', error);
+            if (this.el.id === 'email-button') {
+              window.location.href = 'mailto:info@alphawood.store';
+            }
+          });
         }
       });
 
-      // Obsługa markerów
+      // Модели и навигация
+      const models = [
+        { glb: 'models/cat.glb',   scale: '3 3 3' },
+        { glb: 'models/model.glb', scale: '3 3 3' }
+      ];
+      let currentIndex = 0, currentModel = null;
+      const container = document.querySelector('#model-container');
+      const loadScreen = document.getElementById('loading-screen');
+      const loadText   = document.getElementById('loading-text');
+      const mStatus    = document.getElementById('marker-status');
+
+      function showLoading(msg='Ładowanie modelu...') {
+        loadText.textContent = msg;
+        loadScreen.classList.remove('hidden');
+      }
+      function hideLoading() {
+        loadScreen.classList.add('hidden');
+      }
+
+      function switchModel(delta) {
+        currentIndex = (currentIndex + delta + models.length) % models.length;
+        const m = models[currentIndex];
+        loadModel(m.glb, m.scale, false);
+      }
+
+      function loadModel(path, scale, initial) {
+        if (initial) showLoading();
+        if (currentModel) currentModel.remove();
+        currentModel = document.createElement('a-entity');
+        currentModel.setAttribute('gltf-model', path);
+        currentModel.setAttribute('scale', scale);
+        // currentModel.setAttribute('mixin', 'spin'); // если нужен авто-спин
+        container.appendChild(currentModel);
+        currentModel.addEventListener('model-loaded', () => {
+          if (initial) hideLoading();
+        });
+        currentModel.addEventListener('model-error', () => {
+          if (initial) {
+            loadText.textContent = 'Błąd ładowania';
+            setTimeout(hideLoading, 2000);
+          }
+          console.error('Error loading', path);
+        });
+      }
+
+      document.getElementById('btn-left').addEventListener('click',  () => switchModel(-1));
+      document.getElementById('btn-right').addEventListener('click', () => switchModel( 1));
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        if (navigator.xr) {
+          const ok = await navigator.xr.isSessionSupported('immersive-ar');
+          if (!ok) console.log('WebXR AR unsupported; fallback to AR.js');
+        }
+        loadModel(models[0].glb, models[0].scale, true);
+      });
+
+      // Показать/скрыть статус маркера
       const marker = document.querySelector('#hiro-marker');
-      marker.addEventListener('markerFound', () => {
-        markerStatus.style.display = 'none';
-      });
-      marker.addEventListener('markerLost', () => {
-        markerStatus.style.display = 'block';
-      });
+      marker.addEventListener('markerFound', () => mStatus.style.display = 'none');
+      marker.addEventListener('markerLost',  () => mStatus.style.display = 'block');
     </script>
   </body>
 </html>
