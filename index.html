@@ -185,40 +185,47 @@
         <!-- Przyciski AR -->
         <a-entity position="0 0.75 0">
           <!-- Przycisk strony internetowej -->
-          <a-plane 
+          <a-box 
             id="website-button" 
             position="1.2 0 0" 
             rotation="0 0 0" 
             width="0.5" 
             height="0.5" 
+            depth="0.1"
             material="src: site.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
             website-link="url: https://www.alphawood.store"
-          ></a-plane>
+          ></a-box>
           
           <!-- Przycisk email -->
-          <a-plane 
+          <a-box 
             id="email-button" 
             position="-1.2 0 0" 
             rotation="0 0 0" 
             width="0.5" 
             height="0.5" 
+            depth="0.1"
             material="src: em.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
             email-link="address: info@alphawood.store"
-          ></a-plane>
+          ></a-box>
         </a-entity>
       </a-marker>
       
       <!-- Kamera z kursorem do interakcji -->
       <a-entity camera>
-        <a-cursor raycaster="objects: .clickable"></a-cursor>
+        <a-cursor 
+          raycaster="objects: .clickable; far: 10000; near: 0.1"
+          position="0 0 -1"
+          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+          material="color: white; shader: flat"
+        ></a-cursor>
       </a-entity>
     </a-scene>
 
@@ -229,8 +236,18 @@
           url: {type: 'string'}
         },
         init: function() {
-          this.el.addEventListener('click', () => {
+          const el = this.el;
+          
+          // Obsługa kliknięcia
+          el.addEventListener('click', () => {
             console.log('Opening website:', this.data.url);
+            window.open(this.data.url, '_blank');
+          });
+          
+          // Obsługa dotyku
+          el.addEventListener('touchstart', (evt) => {
+            evt.preventDefault();
+            console.log('Touch detected on website button');
             window.open(this.data.url, '_blank');
           });
         }
@@ -242,8 +259,18 @@
           address: {type: 'string'}
         },
         init: function() {
-          this.el.addEventListener('click', () => {
+          const el = this.el;
+          
+          // Obsługa kliknięcia
+          el.addEventListener('click', () => {
             console.log('Opening email:', this.data.address);
+            window.location.href = `mailto:${this.data.address}`;
+          });
+          
+          // Obsługa dotyku
+          el.addEventListener('touchstart', (evt) => {
+            evt.preventDefault();
+            console.log('Touch detected on email button');
             window.location.href = `mailto:${this.data.address}`;
           });
         }
@@ -254,9 +281,16 @@
         init: function() {
           const el = this.el;
           
+          // Obsługa kliknięcia
           el.addEventListener('click', function(evt) {
             console.log('Element clicked:', el.id);
             console.log('Click event:', evt);
+          });
+          
+          // Obsługa dotyku
+          el.addEventListener('touchstart', function(evt) {
+            console.log('Element touched:', el.id);
+            console.log('Touch event:', evt);
           });
         }
       });
