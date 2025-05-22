@@ -134,11 +134,12 @@
         raycaster="objects: .clickable"
         emitevents="true"
       >
-        <!-- ВОССТАНОВЛЕНА позиция 0 0.75 0 -->
-        <a-entity id="model-wrapper" position="0 0.75 0">
+        <!-- Модель ровно на маркере -->
+        <a-entity id="model-wrapper" position="0 0 0">
           <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
 
+        <!-- Кнопки с тач-поддержкой -->
         <a-entity position="0 0 0">
           <a-plane
             id="website-button"
@@ -165,24 +166,34 @@
         </a-entity>
       </a-marker>
 
-      <a-entity camera>
-        <a-cursor raycaster="objects: .clickable"></a-cursor>
+      <!-- Камера + курсор для клика и тача -->
+      <a-entity
+        camera
+        cursor="rayOrigin: mouse; fuse: false"
+        raycaster="objects: .clickable"
+      >
+        <a-cursor></a-cursor>
       </a-entity>
     </a-scene>
 
     <script>
+      // Обработчик клика и тача
       AFRAME.registerComponent("clickable", {
         init: function () {
-          this.el.addEventListener("click", () => {
-            if (this.el.id === "website-button") {
+          const el = this.el;
+          const onTap = () => {
+            if (el.id === "website-button") {
               window.open("https://www.alphawood.store", "_blank");
-            } else if (this.el.id === "email-button") {
+            } else if (el.id === "email-button") {
               window.location.href = "mailto:info@alphawood.store";
             }
-          });
+          };
+          el.addEventListener("click", onTap);
+          el.addEventListener("touchstart", onTap);
         },
       });
 
+      // Копирование ориентации маркера без ограничений
       AFRAME.registerComponent("model-orientation", {
         tick: function () {
           const marker = document.querySelector("#hiro-marker");
@@ -192,6 +203,7 @@
         },
       });
 
+      // Стабилизация позиции
       AFRAME.registerComponent("model-stabilizer", {
         init: function () {
           this.lastPosition = new THREE.Vector3();
@@ -206,6 +218,7 @@
         },
       });
 
+      // Список моделей и логика переключения
       const models = [
         { glb: "models/cat.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
         { glb: "models/model.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
@@ -250,8 +263,8 @@
       function switchToIndex(i) {
         currentIndex = (i + models.length) % models.length;
         switchModel(models[currentIndex].glb, false);
-        const m = document.querySelector("#hiro-marker");
-        markerStatus.style.display = m.object3D.visible ? "none" : "block";
+        const vis = document.querySelector("#hiro-marker").object3D.visible;
+        markerStatus.style.display = vis ? "none" : "block";
       }
 
       document.getElementById("btn-left").addEventListener("click", () => switchToIndex(currentIndex - 1));
