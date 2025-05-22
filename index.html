@@ -145,9 +145,9 @@
     
       <!-- Marker Hiro -->
       <a-marker 
-        id="hiro-marker" 
+        id="qr-marker" 
         type="pattern" 
-        preset="hiro" 
+        url="qr.patt" 
         smooth="true" 
         smoothCount="10" 
         smoothTolerance="0.01" 
@@ -155,7 +155,6 @@
         minConfidence="0.15"
         raycaster="objects: .clickable"
         emitevents="true"
-        id="marker"
       >
         <!-- Kontener modelu z obrotem -->
         <a-entity id="model-wrapper" position="0 0.75 0">
@@ -340,8 +339,8 @@
         }
 
         // Aktualizujemy status markera
-        const hiroMarker = document.querySelector('#hiro-marker');
-        if (hiroMarker && hiroMarker.object3D.visible) {
+        const qrMarker = document.querySelector('#qr-marker');
+        if (qrMarker && qrMarker.object3D.visible) {
           markerStatus.style.display = 'none';
         } else {
           markerStatus.style.display = 'block';
@@ -380,7 +379,7 @@
       });
 
       // Obsługa markerów
-      const marker = document.querySelector('#hiro-marker');
+      const marker = document.querySelector('#qr-marker');
       marker.addEventListener('markerFound', () => {
         markerStatus.style.display = 'none';
       });
