@@ -149,7 +149,7 @@
 
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3; sourceWidth: 1280; sourceHeight: 720;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
     >
@@ -253,11 +253,12 @@
           // Pobieramy orientację markera
           const marker = document.querySelector('a-marker');
           if (marker && marker.object3D) {
-            // Kopiujemy rotację z markera
-            this.el.object3D.rotation.x = marker.object3D.rotation.x;
+            // Kopiujemy rotację Y z markera (obrót wokół osi Y)
             this.el.object3D.rotation.y = marker.object3D.rotation.y;
-            this.el.object3D.rotation.z = marker.object3D.rotation.z;
           }
+          // Utrzymujemy model w pionie
+          this.el.object3D.rotation.x = 0;
+          this.el.object3D.rotation.z = 0;
         }
       });
 
@@ -285,14 +286,22 @@
         init: function() {
           this.targetScale = new THREE.Vector3(1, 1, 1);
           this.smoothFactor = 0.2;
+          this.fixedScale = true; // Добавляем флаг фиксированного масштаба
         },
         tick: function() {
-          const currentScale = this.el.object3D.scale;
-          
-          // Wyliczamy wygładzoną skalę
-          currentScale.x = currentScale.x + (this.targetScale.x - currentScale.x) * this.smoothFactor;
-          currentScale.y = currentScale.y + (this.targetScale.y - currentScale.y) * this.smoothFactor;
-          currentScale.z = currentScale.z + (this.targetScale.z - currentScale.z) * this.smoothFactor;
+          if (this.fixedScale) {
+            // Поддерживаем фиксированный масштаб
+            const currentScale = this.el.object3D.scale;
+            currentScale.x = this.targetScale.x;
+            currentScale.y = this.targetScale.y;
+            currentScale.z = this.targetScale.z;
+          } else {
+            // Старое поведение с плавным масштабированием
+            const currentScale = this.el.object3D.scale;
+            currentScale.x = currentScale.x + (this.targetScale.x - currentScale.x) * this.smoothFactor;
+            currentScale.y = currentScale.y + (this.targetScale.y - currentScale.y) * this.smoothFactor;
+            currentScale.z = currentScale.z + (this.targetScale.z - currentScale.z) * this.smoothFactor;
+          }
         }
       });
       
@@ -301,14 +310,14 @@
         { 
           glb: 'models/cat.glb', 
           usdz: 'models/cat.usdz',
-          scale: "60 60 60",
+          scale: "30 30 30",
           position: "0 -0.2 0",
           rotation: "0 0 0"
         },
         { 
           glb: 'models/model.glb', 
           usdz: 'models/model.usdz',
-          scale: "80 80 80",
+          scale: "40 40 40",
           position: "0 -0.2 0",
           rotation: "0 0 0"
         }
