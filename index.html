@@ -198,6 +198,8 @@
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
             website-link="url: https://www.alphawood.store"
+            raycaster="objects: .clickable"
+            cursor="fuse: false; rayOrigin: mouse"
           ></a-box>
           
           <!-- Przycisk email -->
@@ -214,6 +216,8 @@
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
             email-link="address: info@alphawood.store"
+            raycaster="objects: .clickable"
+            cursor="fuse: false; rayOrigin: mouse"
           ></a-box>
         </a-entity>
       </a-marker>
@@ -225,6 +229,7 @@
           position="0 0 -1"
           geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
           material="color: white; shader: flat"
+          cursor="fuse: false; rayOrigin: mouse"
         ></a-cursor>
       </a-entity>
     </a-scene>
@@ -250,6 +255,18 @@
             console.log('Touch detected on website button');
             window.open(this.data.url, '_blank');
           });
+
+          // Dodatkowe obsługi zdarzeń
+          el.addEventListener('mousedown', () => {
+            console.log('Mouse down on website button');
+            window.open(this.data.url, '_blank');
+          });
+
+          el.addEventListener('touchend', (evt) => {
+            evt.preventDefault();
+            console.log('Touch end on website button');
+            window.open(this.data.url, '_blank');
+          });
         }
       });
 
@@ -273,6 +290,18 @@
             console.log('Touch detected on email button');
             window.location.href = `mailto:${this.data.address}`;
           });
+
+          // Dodatkowe obsługi zdarzeń
+          el.addEventListener('mousedown', () => {
+            console.log('Mouse down on email button');
+            window.location.href = `mailto:${this.data.address}`;
+          });
+
+          el.addEventListener('touchend', (evt) => {
+            evt.preventDefault();
+            console.log('Touch end on email button');
+            window.location.href = `mailto:${this.data.address}`;
+          });
         }
       });
 
@@ -291,6 +320,17 @@
           el.addEventListener('touchstart', function(evt) {
             console.log('Element touched:', el.id);
             console.log('Touch event:', evt);
+          });
+
+          // Dodatkowe obsługi zdarzeń
+          el.addEventListener('mousedown', function(evt) {
+            console.log('Element mousedown:', el.id);
+            console.log('Mousedown event:', evt);
+          });
+
+          el.addEventListener('touchend', function(evt) {
+            console.log('Element touchend:', el.id);
+            console.log('Touchend event:', evt);
           });
         }
       });
