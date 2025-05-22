@@ -163,6 +163,7 @@
             id="model-container" 
             rotation="0 0 0" 
             scale="1 1 1"
+            look-at="[camera]"
           ></a-entity>
         </a-entity>
         
@@ -221,22 +222,6 @@
               console.log('Email button clicked');
             }
           });
-        }
-      });
-      
-      // Komponent do kontroli orientacji modelu
-      AFRAME.registerComponent('model-orientation', {
-        init: function() {
-          this.el.addEventListener('model-loaded', () => {
-            // Ustawiamy początkową orientację
-            this.el.object3D.rotation.x = 0;
-            this.el.object3D.rotation.z = 0;
-          });
-        },
-        tick: function() {
-          // Utrzymujemy model w pionie
-          this.el.object3D.rotation.x = 0;
-          this.el.object3D.rotation.z = 0;
         }
       });
       
@@ -313,7 +298,6 @@
         currentModel.setAttribute('position', correction.position);
         currentModel.setAttribute('rotation', correction.rotation);
         currentModel.setAttribute('mixin', 'spin'); // Dodajemy obrót
-        currentModel.setAttribute('model-orientation', ''); // Dodajemy kontrolę orientacji
         
         // Dodajemy model do kontenera
         modelContainer.appendChild(currentModel);
