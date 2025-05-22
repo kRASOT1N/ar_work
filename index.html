@@ -150,16 +150,16 @@
         preset="custom" 
         url="qr.patt"
         smooth="true" 
-        smoothCount="20" 
-        smoothTolerance="0.01" 
-        smoothThreshold="2"
-        minConfidence="0.1"
+        smoothCount="30" 
+        smoothTolerance="0.005" 
+        smoothThreshold="5"
+        minConfidence="0.15"
         raycaster="objects: .clickable"
         emitevents="true"
         id="marker"
       >
         <!-- Kontener modelu z obrotem -->
-        <a-entity id="model-wrapper" position="0 0.75 0">
+        <a-entity id="model-wrapper" position="0 0.5 0">
           <a-entity 
             id="model-container" 
             rotation="0 0 0" 
@@ -270,13 +270,13 @@
         if (modelPath.includes('cat.glb')) {
           return {
             rotation: "0 0 0",
-            position: "0 -0.2 0",
+            position: "0 0 0",
             scale: "1.5 1.5 1.5"
           };
         } else if (modelPath.includes('model.glb')) {
           return {
             rotation: "0 0 0",
-            position: "0 -0.2 0",
+            position: "0 0 0",
             scale: "3 3 3"
           };
         } 
