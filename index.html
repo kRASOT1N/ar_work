@@ -16,7 +16,7 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
-    <!-- Skrypt do wyłączania okien dialogowych AR.js -->
+    <!-- Wyłączanie okien dialogowych AR.js -->
     <script>
       window.addEventListener("load", function () {
         if (window.ARjs && window.ARjs.Utils) {
@@ -37,40 +37,30 @@
       body {
         margin: 0;
         padding: 0;
-        background-color: #000;
-        color: white;
+        background: #000;
+        color: #fff;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         height: 100vh;
         overflow: hidden;
       }
       #loading-screen {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
         z-index: 9999;
-        color: white;
+        color: #fff;
       }
-      #loading-screen.hidden {
-        display: none;
-      }
-      #loading-text {
-        margin-top: 20px;
-        font-size: 18px;
-      }
+      #loading-screen.hidden { display: none; }
+      #loading-text { margin-top: 20px; font-size: 18px; }
       #marker-status {
         position: fixed;
-        top: 20px;
-        left: 50%;
+        top: 20px; left: 50%;
         transform: translateX(-50%);
-        background-color: rgba(0, 0, 0, 0.7);
-        color: white;
+        background: rgba(0,0,0,0.7);
         padding: 10px 20px;
         border-radius: 20px;
         font-size: 16px;
@@ -79,41 +69,31 @@
       }
       .model-nav-buttons {
         position: fixed;
-        bottom: 20px;
-        left: 50%;
+        bottom: 20px; left: 50%;
         transform: translateX(-50%);
+        display: flex; gap: 30px;
         z-index: 1000;
-        display: flex;
-        gap: 30px;
       }
       .nav-button {
-        width: 60px;
-        height: 60px;
+        width: 60px; height: 60px;
         cursor: pointer;
-        transition: transform 0.2s;
+        transition: transform .2s;
       }
-      .nav-button:hover {
-        transform: scale(1.1);
-      }
-      .nav-button:active {
-        transform: scale(0.95);
-      }
-      .a-enter-vr {
-        display: none !important;
-      }
+      .nav-button:hover { transform: scale(1.1); }
+      .nav-button:active { transform: scale(0.95); }
+      .a-enter-vr { display: none !important; }
       .button {
         position: absolute;
-        background-color: rgba(255, 255, 255, 0.2);
-        color: white;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
         border: none;
         padding: 10px 20px;
         border-radius: 5px;
         cursor: pointer;
         font-size: 14px;
-        transition: background-color 0.3s;
+        transition: background 0.3s;
         z-index: 1000;
-        width: 80px;
-        height: 32px;
+        width: 80px; height: 32px;
       }
     </style>
   </head>
@@ -154,36 +134,33 @@
         raycaster="objects: .clickable"
         emitevents="true"
       >
-        <!-- Обновлено: модель лежит ровно на плоскости маркера -->
-        <a-entity id="model-wrapper" position="0 0 0">
+        <!-- ВОССТАНОВЛЕНА позиция 0 0.75 0 -->
+        <a-entity id="model-wrapper" position="0 0.75 0">
           <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
 
-        <!-- Кнопки внутри AR -->
         <a-entity position="0 0 0">
           <a-plane
             id="website-button"
             position="1.2 0 0"
-            rotation="0 0 0"
             width="0.5"
             height="0.5"
             material="src: site.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
-            animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
-            animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
+            animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur:100; easing: easeInOutQuad; startEvents: click"
+            animation__clickback="property: scale; from:0.9 0.9 0.9; to:1 1 1; dur:100; easing:easeInOutQuad; startEvents:animationcomplete__click"
           ></a-plane>
           <a-plane
             id="email-button"
             position="-1.2 0 0"
-            rotation="0 0 0"
             width="0.5"
             height="0.5"
             material="src: em.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
-            animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
-            animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
+            animation__click="property: scale; from:1 1 1; to:0.9 0.9 0.9; dur:100; easing:easeInOutQuad; startEvents:click"
+            animation__clickback="property: scale; from:0.9 0.9 0.9; to:1 1 1; dur:100; easing:easeInOutQuad; startEvents:animationcomplete__click"
           ></a-plane>
         </a-entity>
       </a-marker>
@@ -194,7 +171,6 @@
     </a-scene>
 
     <script>
-      // Обработчики click для кнопок
       AFRAME.registerComponent("clickable", {
         init: function () {
           this.el.addEventListener("click", () => {
@@ -207,18 +183,15 @@
         },
       });
 
-      // Копирует полную ориентацию маркера на модель без ограничений
       AFRAME.registerComponent("model-orientation", {
         tick: function () {
           const marker = document.querySelector("#hiro-marker");
           if (marker && marker.object3D) {
-            // Просто копируем quaternion
             this.el.object3D.quaternion.copy(marker.object3D.quaternion);
           }
         },
       });
 
-      // Стабилизатор позиции (без изменений)
       AFRAME.registerComponent("model-stabilizer", {
         init: function () {
           this.lastPosition = new THREE.Vector3();
@@ -233,22 +206,9 @@
         },
       });
 
-      // Список моделей
       const models = [
-        {
-          glb: "models/cat.glb",
-          usdz: "models/cat.usdz",
-          scale: "3 3 3",
-          position: "0 0 0",
-          rotation: "0 0 0",
-        },
-        {
-          glb: "models/model.glb",
-          usdz: "models/model.usdz",
-          scale: "3 3 3",
-          position: "0 0 0",
-          rotation: "0 0 0",
-        },
+        { glb: "models/cat.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
+        { glb: "models/model.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
       ];
       let currentIndex = 0;
       let currentModel = null;
@@ -265,12 +225,12 @@
         loadingScreen.classList.add("hidden");
       }
 
-      function switchModel(modelPath, isInitialLoad = false) {
-        if (isInitialLoad) showLoading();
+      function switchModel(path, initial) {
+        if (initial) showLoading();
         if (currentModel) currentModel.remove();
-        const cfg = models.find((m) => m.glb === modelPath) || {};
+        const cfg = models.find((m) => m.glb === path) || {};
         currentModel = document.createElement("a-entity");
-        currentModel.setAttribute("gltf-model", modelPath);
+        currentModel.setAttribute("gltf-model", path);
         currentModel.setAttribute("scale", cfg.scale || "1.5 1.5 1.5");
         currentModel.setAttribute("position", cfg.position || "0 0 0");
         currentModel.setAttribute("rotation", cfg.rotation || "0 0 0");
@@ -278,50 +238,35 @@
         currentModel.setAttribute("model-orientation", "");
         currentModel.setAttribute("model-stabilizer", "");
         modelContainer.appendChild(currentModel);
-        currentModel.addEventListener("model-loaded", () => {
-          if (isInitialLoad) hideLoading();
-        });
+        currentModel.addEventListener("model-loaded", () => { if (initial) hideLoading(); });
         currentModel.addEventListener("model-error", () => {
-          if (isInitialLoad) {
+          if (initial) {
             loadingText.textContent = "Błąd ładowania modelu";
             setTimeout(hideLoading, 3000);
           }
         });
       }
 
-      function switchToIndex(idx) {
-        currentIndex = (idx + models.length) % models.length;
+      function switchToIndex(i) {
+        currentIndex = (i + models.length) % models.length;
         switchModel(models[currentIndex].glb, false);
         const m = document.querySelector("#hiro-marker");
         markerStatus.style.display = m.object3D.visible ? "none" : "block";
       }
 
-      document.getElementById("btn-left").addEventListener("click", () => {
-        switchToIndex(currentIndex - 1);
-      });
-      document.getElementById("btn-right").addEventListener("click", () => {
-        switchToIndex(currentIndex + 1);
-      });
+      document.getElementById("btn-left").addEventListener("click", () => switchToIndex(currentIndex - 1));
+      document.getElementById("btn-right").addEventListener("click", () => switchToIndex(currentIndex + 1));
 
       document.addEventListener("DOMContentLoaded", async () => {
         try {
-          if ("xr" in navigator) {
-            const supported = await navigator.xr.isSessionSupported("immersive-ar");
-            if (!supported) return;
-          }
+          if ("xr" in navigator && !(await navigator.xr.isSessionSupported("immersive-ar"))) return;
           switchModel(models[0].glb, true);
-        } catch (e) {
-          console.error(e);
-        }
+        } catch (e) { console.error(e); }
       });
 
       const markerEl = document.querySelector("#hiro-marker");
-      markerEl.addEventListener("markerFound", () => {
-        markerStatus.style.display = "none";
-      });
-      markerEl.addEventListener("markerLost", () => {
-        markerStatus.style.display = "block";
-      });
+      markerEl.addEventListener("markerFound", () => (markerStatus.style.display = "none"));
+      markerEl.addEventListener("markerLost", () => (markerStatus.style.display = "block"));
     </script>
   </body>
 </html>
