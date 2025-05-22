@@ -124,7 +124,7 @@
       <div id="loading-text">Ładowanie modelu...</div>
     </div>
     
-    <div id="marker-status">Nakieruj kamerę na marker QR</div>
+    <div id="marker-status">Nakieruj kamerę na marker Hiro</div>
     
     <!-- Przyciski nawigacji -->
     <div class="model-nav-buttons">
@@ -143,28 +143,29 @@
         <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
     
-      <!-- Marker QR -->
+      <!-- Marker Hiro -->
       <a-marker 
-        id="qr-marker" 
+        id="hiro-marker" 
         type="pattern" 
         preset="custom" 
         url="qr.patt"
         smooth="true" 
         smoothCount="30" 
-        smoothTolerance="0.005" 
-        smoothThreshold="5"
+        smoothTolerance="0.05" 
+        smoothThreshold="1"
         minConfidence="0.15"
         raycaster="objects: .clickable"
         emitevents="true"
         id="marker"
       >
         <!-- Kontener modelu z obrotem -->
-        <a-entity id="model-wrapper" position="0 0.5 0">
+        <a-entity id="model-wrapper" position="0 0.75 0" position-based-animation="property: position; to: 0 0.75 0; dur: 200; easing: linear">
           <a-entity 
             id="model-container" 
             rotation="0 0 0" 
             scale="1 1 1"
             look-at="[camera]"
+            position-based-animation="property: position; to: 0 0 0; dur: 200; easing: linear"
           ></a-entity>
         </a-entity>
         
@@ -233,12 +234,14 @@
             // Ustawiamy początkową orientację
             this.el.object3D.rotation.x = 0;
             this.el.object3D.rotation.z = 0;
+            this.el.object3D.position.y = 0.75; // Фиксированная высота
           });
         },
         tick: function() {
-          // Utrzymujemy model w pionie
+          // Utrzymujemy model w pionie и фиксируем высоту
           this.el.object3D.rotation.x = 0;
           this.el.object3D.rotation.z = 0;
+          this.el.object3D.position.y = 0.75;
         }
       });
       
@@ -270,13 +273,13 @@
         if (modelPath.includes('cat.glb')) {
           return {
             rotation: "0 0 0",
-            position: "0 0 0",
+            position: "0 -0.2 0",
             scale: "1.5 1.5 1.5"
           };
         } else if (modelPath.includes('model.glb')) {
           return {
             rotation: "0 0 0",
-            position: "0 0 0",
+            position: "0 -0.2 0",
             scale: "3 3 3"
           };
         } 
@@ -358,8 +361,8 @@
         }
 
         // Aktualizujemy status markera
-        const qrMarker = document.querySelector('#qr-marker');
-        if (qrMarker && qrMarker.object3D.visible) {
+        const hiroMarker = document.querySelector('#hiro-marker');
+        if (hiroMarker && hiroMarker.object3D.visible) {
           markerStatus.style.display = 'none';
         } else {
           markerStatus.style.display = 'block';
@@ -398,7 +401,7 @@
       });
 
       // Obsługa markerów
-      const marker = document.querySelector('#qr-marker');
+      const marker = document.querySelector('#hiro-marker');
       marker.addEventListener('markerFound', () => {
         markerStatus.style.display = 'none';
       });
