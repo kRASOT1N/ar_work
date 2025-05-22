@@ -171,6 +171,12 @@
         raycaster="objects: .clickable"
         emitevents="true"
         id="marker"
+        smoothCount="10"
+        smoothTolerance="0.01"
+        smoothThreshold="2"
+        position="0 0 0"
+        rotation="0 0 0"
+        scale="1 1 1"
       >
         <!-- Kontener modelu z obrotem -->
         <a-entity id="model-wrapper" position="0 0.75 0">
@@ -178,7 +184,6 @@
             id="model-container" 
             rotation="0 0 0" 
             scale="1 1 1"
-            look-at="[camera]"
           ></a-entity>
         </a-entity>
         
@@ -345,9 +350,8 @@
           });
         },
         tick: function() {
-          // Utrzymujemy model w pionie
-          this.el.object3D.rotation.x = 0;
-          this.el.object3D.rotation.z = 0;
+          // Pozwalamy na swobodny obrót modelu
+          // Usuwamy ograniczenia rotacji
         }
       });
 
@@ -392,14 +396,14 @@
           glb: 'models/cat.glb', 
           usdz: 'models/cat.usdz',
           scale: "3.6 3.6 3.6",
-          position: "0 -0.2 0",
+              position: "0 -0.2 0",
           rotation: "0 0 0"
         },
         { 
           glb: 'models/model.glb', 
           usdz: 'models/model.usdz',
           scale: "7.2 7.2 7.2",
-          position: "0 -0.2 0",
+              position: "0 -0.2 0",
           rotation: "0 0 0"
         }
       ];
@@ -433,10 +437,10 @@
         }
         
         // Usuwamy poprzedni model, jeśli istnieje
-        if (currentModel && currentModel.parentNode) {
-          currentModel.parentNode.removeChild(currentModel);
-        }
-        
+          if (currentModel && currentModel.parentNode) {
+            currentModel.parentNode.removeChild(currentModel);
+          }
+          
         // Znajdujemy konfigurację modelu
         const modelConfig = models.find(m => m.glb === modelPath) || {
           scale: "1.5 1.5 1.5",
@@ -445,8 +449,8 @@
         };
         
         // Tworzymy nowy model
-        currentModel = document.createElement('a-entity');
-        currentModel.setAttribute('gltf-model', modelPath);
+          currentModel = document.createElement('a-entity');
+          currentModel.setAttribute('gltf-model', modelPath);
         currentModel.setAttribute('scale', modelConfig.scale);
         currentModel.setAttribute('position', modelConfig.position);
         currentModel.setAttribute('rotation', modelConfig.rotation);
@@ -456,18 +460,18 @@
         currentModel.setAttribute('scale-controller', '');
         
         // Dodajemy model do kontenera
-        modelContainer.appendChild(currentModel);
-        
+          modelContainer.appendChild(currentModel);
+          
         // Obsługa ładowania modelu
-        currentModel.addEventListener('model-loaded', () => {
+          currentModel.addEventListener('model-loaded', () => {
           console.log('Model załadowany:', modelPath);
           if (isInitialLoad) {
             hideLoading();
           }
-        });
-        
+          });
+          
         // Obsługa błędu ładowania
-        currentModel.addEventListener('model-error', () => {
+          currentModel.addEventListener('model-error', () => {
           console.error('Błąd ładowania modelu:', modelPath);
           if (isInitialLoad) {
             loadingText.textContent = 'Błąd ładowania modelu';
@@ -483,7 +487,7 @@
           currentIndex = models.length - 1;
         } else if (index >= models.length) {
           currentIndex = 0;
-        } else {
+          } else {
           currentIndex = index;
         }
 
