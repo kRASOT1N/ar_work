@@ -171,12 +171,6 @@
         raycaster="objects: .clickable"
         emitevents="true"
         id="marker"
-        smoothCount="10"
-        smoothTolerance="0.01"
-        smoothThreshold="2"
-        position="0 0 0"
-        rotation="0 0 0"
-        scale="1 1 1"
       >
         <!-- Kontener modelu z obrotem -->
         <a-entity id="model-wrapper" position="0 0.75 0">
@@ -184,158 +178,64 @@
             id="model-container" 
             rotation="0 0 0" 
             scale="1 1 1"
+            look-at="[camera]"
           ></a-entity>
         </a-entity>
         
         <!-- Przyciski AR -->
         <a-entity position="0 0.75 0">
           <!-- Przycisk strony internetowej -->
-          <a-box 
+          <a-plane 
             id="website-button" 
             position="1.2 0 0" 
             rotation="0 0 0" 
             width="0.5" 
             height="0.5" 
-            depth="0.1"
             material="src: site.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
-            website-link="url: https://www.alphawood.store"
-            raycaster="objects: .clickable"
-            cursor="fuse: false; rayOrigin: mouse"
-          ></a-box>
+          ></a-plane>
           
           <!-- Przycisk email -->
-          <a-box 
+          <a-plane 
             id="email-button" 
             position="-1.2 0 0" 
             rotation="0 0 0" 
             width="0.5" 
             height="0.5" 
-            depth="0.1"
             material="src: em.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
             animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
             animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
-            email-link="address: info@alphawood.store"
-            raycaster="objects: .clickable"
-            cursor="fuse: false; rayOrigin: mouse"
-          ></a-box>
+          ></a-plane>
         </a-entity>
       </a-marker>
       
       <!-- Kamera z kursorem do interakcji -->
       <a-entity camera>
-        <a-cursor 
-          raycaster="objects: .clickable; far: 10000; near: 0.1"
-          position="0 0 -1"
-          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-          material="color: white; shader: flat"
-          cursor="fuse: false; rayOrigin: mouse"
-        ></a-cursor>
+        <a-cursor raycaster="objects: .clickable"></a-cursor>
       </a-entity>
     </a-scene>
 
     <script>
-      // Komponent do obsługi linków do stron internetowych
-      AFRAME.registerComponent('website-link', {
-        schema: {
-          url: {type: 'string'}
-        },
-        init: function() {
-          const el = this.el;
-          
-          // Obsługa kliknięcia
-          el.addEventListener('click', () => {
-            console.log('Opening website:', this.data.url);
-            window.open(this.data.url, '_blank');
-          });
-          
-          // Obsługa dotyku
-          el.addEventListener('touchstart', (evt) => {
-            evt.preventDefault();
-            console.log('Touch detected on website button');
-            window.open(this.data.url, '_blank');
-          });
-
-          // Dodatkowe obsługi zdarzeń
-          el.addEventListener('mousedown', () => {
-            console.log('Mouse down on website button');
-            window.open(this.data.url, '_blank');
-          });
-
-          el.addEventListener('touchend', (evt) => {
-            evt.preventDefault();
-            console.log('Touch end on website button');
-            window.open(this.data.url, '_blank');
-          });
-        }
-      });
-
-      // Komponent do obsługi linków email
-      AFRAME.registerComponent('email-link', {
-        schema: {
-          address: {type: 'string'}
-        },
-        init: function() {
-          const el = this.el;
-          
-          // Obsługa kliknięcia
-          el.addEventListener('click', () => {
-            console.log('Opening email:', this.data.address);
-            window.location.href = `mailto:${this.data.address}`;
-          });
-          
-          // Obsługa dotyku
-          el.addEventListener('touchstart', (evt) => {
-            evt.preventDefault();
-            console.log('Touch detected on email button');
-            window.location.href = `mailto:${this.data.address}`;
-          });
-
-          // Dodatkowe obsługi zdarzeń
-          el.addEventListener('mousedown', () => {
-            console.log('Mouse down on email button');
-            window.location.href = `mailto:${this.data.address}`;
-          });
-
-          el.addEventListener('touchend', (evt) => {
-            evt.preventDefault();
-            console.log('Touch end on email button');
-            window.location.href = `mailto:${this.data.address}`;
-          });
-        }
-      });
-
-      // Dodatkowy komponent do debugowania kliknięć
+      // Rejestrujemy komponent do obsługi kliknięć
       AFRAME.registerComponent('clickable', {
         init: function() {
           const el = this.el;
           
-          // Obsługa kliknięcia
-          el.addEventListener('click', function(evt) {
-            console.log('Element clicked:', el.id);
-            console.log('Click event:', evt);
-          });
-          
-          // Obsługa dotyku
-          el.addEventListener('touchstart', function(evt) {
-            console.log('Element touched:', el.id);
-            console.log('Touch event:', evt);
-          });
-
-          // Dodatkowe obsługi zdarzeń
-          el.addEventListener('mousedown', function(evt) {
-            console.log('Element mousedown:', el.id);
-            console.log('Mousedown event:', evt);
-          });
-
-          el.addEventListener('touchend', function(evt) {
-            console.log('Element touchend:', el.id);
-            console.log('Touchend event:', evt);
+          el.addEventListener('click', function() {
+            const id = el.id;
+            
+            if (id === 'website-button') {
+              window.open('https://www.alphawood.store', '_blank');
+              console.log('Kliknięto przycisk strony internetowej');
+            } else if (id === 'email-button') {
+              window.location.href = 'mailto:info@alphawood.store';
+              console.log('Email button clicked');
+            }
           });
         }
       });
@@ -350,8 +250,9 @@
           });
         },
         tick: function() {
-          // Pozwalamy na swobodny obrót modelu
-          // Usuwamy ograniczenia rotacji
+          // Utrzymujemy model w pionie
+          this.el.object3D.rotation.x = 0;
+          this.el.object3D.rotation.z = 0;
         }
       });
 
@@ -396,14 +297,14 @@
           glb: 'models/cat.glb', 
           usdz: 'models/cat.usdz',
           scale: "3.6 3.6 3.6",
-              position: "0 -0.2 0",
+          position: "0 -0.2 0",
           rotation: "0 0 0"
         },
         { 
           glb: 'models/model.glb', 
           usdz: 'models/model.usdz',
           scale: "7.2 7.2 7.2",
-              position: "0 -0.2 0",
+          position: "0 -0.2 0",
           rotation: "0 0 0"
         }
       ];
@@ -437,10 +338,10 @@
         }
         
         // Usuwamy poprzedni model, jeśli istnieje
-          if (currentModel && currentModel.parentNode) {
-            currentModel.parentNode.removeChild(currentModel);
-          }
-          
+        if (currentModel && currentModel.parentNode) {
+          currentModel.parentNode.removeChild(currentModel);
+        }
+        
         // Znajdujemy konfigurację modelu
         const modelConfig = models.find(m => m.glb === modelPath) || {
           scale: "1.5 1.5 1.5",
@@ -449,8 +350,8 @@
         };
         
         // Tworzymy nowy model
-          currentModel = document.createElement('a-entity');
-          currentModel.setAttribute('gltf-model', modelPath);
+        currentModel = document.createElement('a-entity');
+        currentModel.setAttribute('gltf-model', modelPath);
         currentModel.setAttribute('scale', modelConfig.scale);
         currentModel.setAttribute('position', modelConfig.position);
         currentModel.setAttribute('rotation', modelConfig.rotation);
@@ -460,18 +361,18 @@
         currentModel.setAttribute('scale-controller', '');
         
         // Dodajemy model do kontenera
-          modelContainer.appendChild(currentModel);
-          
+        modelContainer.appendChild(currentModel);
+        
         // Obsługa ładowania modelu
-          currentModel.addEventListener('model-loaded', () => {
+        currentModel.addEventListener('model-loaded', () => {
           console.log('Model załadowany:', modelPath);
           if (isInitialLoad) {
             hideLoading();
           }
-          });
-          
+        });
+        
         // Obsługa błędu ładowania
-          currentModel.addEventListener('model-error', () => {
+        currentModel.addEventListener('model-error', () => {
           console.error('Błąd ładowania modelu:', modelPath);
           if (isInitialLoad) {
             loadingText.textContent = 'Błąd ładowania modelu';
@@ -487,7 +388,7 @@
           currentIndex = models.length - 1;
         } else if (index >= models.length) {
           currentIndex = 0;
-          } else {
+        } else {
           currentIndex = index;
         }
 
