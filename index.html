@@ -124,7 +124,7 @@
       <div id="loading-text">Ładowanie modelu...</div>
     </div>
     
-    <div id="marker-status">Nakieruj kamerę na marker Hiro</div>
+    <div id="marker-status">Nakieruj kamerę na marker QR</div>
     
     <!-- Przyciski nawigacji -->
     <div class="model-nav-buttons">
@@ -143,9 +143,9 @@
         <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
     
-      <!-- Marker Hiro -->
+      <!-- Marker QR -->
       <a-marker 
-        id="hiro-marker" 
+        id="qr-marker" 
         type="pattern" 
         preset="custom" 
         url="qr.patt"
@@ -358,8 +358,8 @@
         }
 
         // Aktualizujemy status markera
-        const hiroMarker = document.querySelector('#hiro-marker');
-        if (hiroMarker && hiroMarker.object3D.visible) {
+        const qrMarker = document.querySelector('#qr-marker');
+        if (qrMarker && qrMarker.object3D.visible) {
           markerStatus.style.display = 'none';
         } else {
           markerStatus.style.display = 'block';
@@ -398,7 +398,7 @@
       });
 
       // Obsługa markerów
-      const marker = document.querySelector('#hiro-marker');
+      const marker = document.querySelector('#qr-marker');
       marker.addEventListener('markerFound', () => {
         markerStatus.style.display = 'none';
       });
