@@ -149,7 +149,7 @@
 
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3; sourceWidth: 1280; sourceHeight: 720;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
     >
@@ -178,7 +178,6 @@
             id="model-container" 
             rotation="0 0 0" 
             scale="1 1 1"
-            look-at="[camera]"
           ></a-entity>
         </a-entity>
         
@@ -244,21 +243,21 @@
       AFRAME.registerComponent('model-orientation', {
         init: function() {
           this.el.addEventListener('model-loaded', () => {
-            // Ustawiamy początkową orientację
-            this.el.object3D.rotation.x = 0;
-            this.el.object3D.rotation.z = 0;
+            // Inicjalizacja komponentu
           });
         },
         tick: function() {
           // Pobieramy orientację markera
           const marker = document.querySelector('a-marker');
           if (marker && marker.object3D) {
-            // Kopiujemy rotację Y z markera (obrót wokół osi Y)
-            this.el.object3D.rotation.y = marker.object3D.rotation.y;
+            // Kopiujemy pełną rotację z markera
+            this.el.object3D.quaternion.copy(marker.object3D.quaternion);
+            
+            // Opcjonalne ograniczenie kąta nachylenia (np. ±80 stopni)
+            const rotation = this.el.object3D.rotation;
+            if (rotation.x > Math.PI * 0.44) rotation.x = Math.PI * 0.44;
+            if (rotation.x < -Math.PI * 0.44) rotation.x = -Math.PI * 0.44;
           }
-          // Utrzymujemy model w pionie
-          this.el.object3D.rotation.x = 0;
-          this.el.object3D.rotation.z = 0;
         }
       });
 
@@ -278,30 +277,6 @@
           
           // Aktualizujemy ostatnią pozycję
           this.lastPosition.copy(currentPosition);
-        }
-      });
-
-      // Komponent do kontroli skali
-      AFRAME.registerComponent('scale-controller', {
-        init: function() {
-          this.targetScale = new THREE.Vector3(1, 1, 1);
-          this.smoothFactor = 0.2;
-          this.fixedScale = true; // Добавляем флаг фиксированного масштаба
-        },
-        tick: function() {
-          if (this.fixedScale) {
-            // Поддерживаем фиксированный масштаб
-            const currentScale = this.el.object3D.scale;
-            currentScale.x = this.targetScale.x;
-            currentScale.y = this.targetScale.y;
-            currentScale.z = this.targetScale.z;
-          } else {
-            // Старое поведение с плавным масштабированием
-            const currentScale = this.el.object3D.scale;
-            currentScale.x = currentScale.x + (this.targetScale.x - currentScale.x) * this.smoothFactor;
-            currentScale.y = currentScale.y + (this.targetScale.y - currentScale.y) * this.smoothFactor;
-            currentScale.z = currentScale.z + (this.targetScale.z - currentScale.z) * this.smoothFactor;
-          }
         }
       });
       
@@ -372,7 +347,6 @@
         currentModel.setAttribute('mixin', 'spin');
         currentModel.setAttribute('model-orientation', '');
         currentModel.setAttribute('model-stabilizer', '');
-        currentModel.setAttribute('scale-controller', '');
         
         // Dodajemy model do kontenera
         modelContainer.appendChild(currentModel);
