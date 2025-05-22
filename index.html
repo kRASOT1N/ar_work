@@ -134,7 +134,7 @@
 
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.15;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3;"
       renderer="logarithmicDepthBuffer: true; precision: medium;"
       vr-mode-ui="enabled: false"
     >
@@ -147,19 +147,18 @@
       <a-marker 
         id="hiro-marker" 
         type="pattern" 
-        preset="custom"
-        url="pattern-qrcode_209042555_ef3afd41cbdbe581ebf6bff030293031.patt"
+        preset="hiro" 
         smooth="true" 
-        smoothCount="10" 
+        smoothCount="20" 
         smoothTolerance="0.01" 
         smoothThreshold="2"
-        minConfidence="0.15"
+        minConfidence="0.1"
         raycaster="objects: .clickable"
         emitevents="true"
         id="marker"
       >
         <!-- Kontener modelu z obrotem -->
-        <a-entity id="model-wrapper" position="0 0 0">
+        <a-entity id="model-wrapper" position="0 0.75 0">
           <a-entity 
             id="model-container" 
             rotation="0 0 0" 
@@ -270,13 +269,13 @@
         if (modelPath.includes('cat.glb')) {
           return {
             rotation: "0 0 0",
-            position: "0 0 0",
+            position: "0 -0.2 0",
             scale: "1.5 1.5 1.5"
           };
         } else if (modelPath.includes('model.glb')) {
           return {
             rotation: "0 0 0",
-            position: "0 0 0",
+            position: "0 -0.2 0",
             scale: "3 3 3"
           };
         } 
