@@ -147,25 +147,23 @@
       <a-marker 
         id="hiro-marker" 
         type="pattern" 
-        preset="custom" 
-        url="qr.patt"
+        preset="hiro" 
         smooth="true" 
-        smoothCount="30" 
-        smoothTolerance="0.05" 
-        smoothThreshold="1"
+        smoothCount="10" 
+        smoothTolerance="0.01" 
+        smoothThreshold="2"
         minConfidence="0.15"
         raycaster="objects: .clickable"
         emitevents="true"
         id="marker"
       >
         <!-- Kontener modelu z obrotem -->
-        <a-entity id="model-wrapper" position="0 0.75 0" position-based-animation="property: position; to: 0 0.75 0; dur: 200; easing: linear">
+        <a-entity id="model-wrapper" position="0 0.75 0">
           <a-entity 
             id="model-container" 
             rotation="0 0 0" 
             scale="1 1 1"
             look-at="[camera]"
-            position-based-animation="property: position; to: 0 0 0; dur: 200; easing: linear"
           ></a-entity>
         </a-entity>
         
@@ -234,21 +232,66 @@
             // Ustawiamy początkową orientację
             this.el.object3D.rotation.x = 0;
             this.el.object3D.rotation.z = 0;
-            this.el.object3D.position.y = 0.75; // Фиксированная высота
           });
         },
         tick: function() {
-          // Utrzymujemy model w pionie и фиксируем высоту
+          // Utrzymujemy model w pionie
           this.el.object3D.rotation.x = 0;
           this.el.object3D.rotation.z = 0;
-          this.el.object3D.position.y = 0.75;
+        }
+      });
+
+      // Komponent do stabilizacji modelu
+      AFRAME.registerComponent('model-stabilizer', {
+        init: function() {
+          this.lastPosition = new THREE.Vector3();
+          this.smoothFactor = 0.3; // Współczynnik wygładzania (0-1)
+        },
+        tick: function() {
+          const currentPosition = this.el.object3D.position;
+          
+          // Wyliczamy wygładzoną pozycję
+          currentPosition.x = this.lastPosition.x + (currentPosition.x - this.lastPosition.x) * this.smoothFactor;
+          currentPosition.y = this.lastPosition.y + (currentPosition.y - this.lastPosition.y) * this.smoothFactor;
+          currentPosition.z = this.lastPosition.z + (currentPosition.z - this.lastPosition.z) * this.smoothFactor;
+          
+          // Aktualizujemy ostatnią pozycję
+          this.lastPosition.copy(currentPosition);
+        }
+      });
+
+      // Komponent do kontroli skali
+      AFRAME.registerComponent('scale-controller', {
+        init: function() {
+          this.targetScale = new THREE.Vector3(1, 1, 1);
+          this.smoothFactor = 0.2;
+        },
+        tick: function() {
+          const currentScale = this.el.object3D.scale;
+          
+          // Wyliczamy wygładzoną skalę
+          currentScale.x = currentScale.x + (this.targetScale.x - currentScale.x) * this.smoothFactor;
+          currentScale.y = currentScale.y + (this.targetScale.y - currentScale.y) * this.smoothFactor;
+          currentScale.z = currentScale.z + (this.targetScale.z - currentScale.z) * this.smoothFactor;
         }
       });
       
       // Lista modeli
       const models = [
-        { glb: 'models/cat.glb', usdz: 'models/cat.usdz' },
-        { glb: 'models/model.glb', usdz: 'models/model.usdz' }
+        { 
+          glb: 'models/cat.glb', 
+          usdz: 'models/cat.usdz',
+          scale: "1.5 1.5 1.5",
+          position: "0 -0.2 0",
+          rotation: "0 0 0"
+        },
+        { 
+          glb: 'models/model.glb', 
+          usdz: 'models/model.usdz',
+          scale: "3 3 3",
+          position: "0 -0.2 0",
+          rotation: "0 0 0"
+        }
       ];
       
       let currentIndex = 0;
@@ -268,30 +311,6 @@
         loadingScreen.classList.add('hidden');
       }
 
-      // Korekta orientacji modeli w zależności od ich typu
-      function getModelCorrection(modelPath) {
-        if (modelPath.includes('cat.glb')) {
-          return {
-            rotation: "0 0 0",
-            position: "0 -0.2 0",
-            scale: "1.5 1.5 1.5"
-          };
-        } else if (modelPath.includes('model.glb')) {
-          return {
-            rotation: "0 0 0",
-            position: "0 -0.2 0",
-            scale: "3 3 3"
-          };
-        } 
-        
-        // Wartości domyślne
-        return {
-          rotation: "0 0 0",
-          position: "0 0 0",
-          scale: "1.5 1.5 1.5"
-        };
-      }
-
       // Funkcja do przełączania modeli
       function switchModel(modelPath, isInitialLoad = false) {
         if (!modelPath) {
@@ -308,17 +327,23 @@
           currentModel.parentNode.removeChild(currentModel);
         }
         
-        // Pobieramy parametry korekty dla wybranego modelu
-        const correction = getModelCorrection(modelPath);
+        // Znajdujemy konfigurację modelu
+        const modelConfig = models.find(m => m.glb === modelPath) || {
+          scale: "1.5 1.5 1.5",
+          position: "0 0 0",
+          rotation: "0 0 0"
+        };
         
         // Tworzymy nowy model
         currentModel = document.createElement('a-entity');
         currentModel.setAttribute('gltf-model', modelPath);
-        currentModel.setAttribute('scale', correction.scale);
-        currentModel.setAttribute('position', correction.position);
-        currentModel.setAttribute('rotation', correction.rotation);
-        currentModel.setAttribute('mixin', 'spin'); // Dodajemy obrót
-        currentModel.setAttribute('model-orientation', ''); // Dodajemy kontrolę orientacji
+        currentModel.setAttribute('scale', modelConfig.scale);
+        currentModel.setAttribute('position', modelConfig.position);
+        currentModel.setAttribute('rotation', modelConfig.rotation);
+        currentModel.setAttribute('mixin', 'spin');
+        currentModel.setAttribute('model-orientation', '');
+        currentModel.setAttribute('model-stabilizer', '');
+        currentModel.setAttribute('scale-controller', '');
         
         // Dodajemy model do kontenera
         modelContainer.appendChild(currentModel);
