@@ -124,7 +124,7 @@
       <div id="loading-text">Ładowanie modelu...</div>
     </div>
     
-    <div id="marker-status">Nakieruj kamerę na marker QR</div>
+    <div id="marker-status">Nakieruj kamerę na marker Hiro</div>
     
     <!-- Przyciski nawigacji -->
     <div class="model-nav-buttons">
@@ -143,11 +143,12 @@
         <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
     
-      <!-- Marker QR -->
+      <!-- Marker Hiro -->
       <a-marker 
-        id="qr-marker" 
+        id="hiro-marker" 
         type="pattern" 
-        url="pattern-qr-code.patt" 
+        preset="custom"
+        url="pattern-qr-code.patt"
         smooth="true" 
         smoothCount="10" 
         smoothTolerance="0.01" 
@@ -155,6 +156,7 @@
         minConfidence="0.15"
         raycaster="objects: .clickable"
         emitevents="true"
+        id="marker"
       >
         <!-- Kontener modelu z obrotem -->
         <a-entity id="model-wrapper" position="0 0.75 0">
@@ -221,6 +223,22 @@
               console.log('Email button clicked');
             }
           });
+        }
+      });
+      
+      // Komponent do kontroli orientacji modelu
+      AFRAME.registerComponent('model-orientation', {
+        init: function() {
+          this.el.addEventListener('model-loaded', () => {
+            // Ustawiamy początkową orientację
+            this.el.object3D.rotation.x = 0;
+            this.el.object3D.rotation.z = 0;
+          });
+        },
+        tick: function() {
+          // Utrzymujemy model w pionie
+          this.el.object3D.rotation.x = 0;
+          this.el.object3D.rotation.z = 0;
         }
       });
       
@@ -297,6 +315,7 @@
         currentModel.setAttribute('position', correction.position);
         currentModel.setAttribute('rotation', correction.rotation);
         currentModel.setAttribute('mixin', 'spin'); // Dodajemy obrót
+        currentModel.setAttribute('model-orientation', ''); // Dodajemy kontrolę orientacji
         
         // Dodajemy model do kontenera
         modelContainer.appendChild(currentModel);
@@ -339,8 +358,8 @@
         }
 
         // Aktualizujemy status markera
-        const qrMarker = document.querySelector('#qr-marker');
-        if (qrMarker && qrMarker.object3D.visible) {
+        const hiroMarker = document.querySelector('#hiro-marker');
+        if (hiroMarker && hiroMarker.object3D.visible) {
           markerStatus.style.display = 'none';
         } else {
           markerStatus.style.display = 'block';
@@ -379,7 +398,7 @@
       });
 
       // Obsługa markerów
-      const marker = document.querySelector('#qr-marker');
+      const marker = document.querySelector('#hiro-marker');
       marker.addEventListener('markerFound', () => {
         markerStatus.style.display = 'none';
       });
