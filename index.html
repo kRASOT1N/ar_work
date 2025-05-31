@@ -136,7 +136,7 @@
       >
         <!-- Модель ровно на маркере -->
         <a-entity id="model-wrapper" position="0 0 0">
-          <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
+          <a-entity id="model-container" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
 
         <!-- Кнопки с тач-поддержкой -->
@@ -208,20 +208,20 @@
         init: function () {
           this.lastPosition = new THREE.Vector3();
           this.lastRotation = new THREE.Euler();
-          this.smoothFactor = 0.1;
-          this.rotationSmoothFactor = 0.1;
-          this.positionThreshold = 0.01;
-          this.rotationThreshold = 0.01;
+          this.smoothFactor = 0.05;
+          this.rotationSmoothFactor = 0.05;
+          this.positionThreshold = 0.005;
+          this.rotationThreshold = 0.005;
+          this.fixedHeight = 0;
         },
         tick: function () {
           const pos = this.el.object3D.position;
           const rot = this.el.object3D.rotation;
           
+          pos.y = this.fixedHeight;
+          
           if (Math.abs(pos.x - this.lastPosition.x) > this.positionThreshold) {
             pos.x = this.lastPosition.x + (pos.x - this.lastPosition.x) * this.smoothFactor;
-          }
-          if (Math.abs(pos.y - this.lastPosition.y) > this.positionThreshold) {
-            pos.y = this.lastPosition.y + (pos.y - this.lastPosition.y) * this.smoothFactor;
           }
           if (Math.abs(pos.z - this.lastPosition.z) > this.positionThreshold) {
             pos.z = this.lastPosition.z + (pos.z - this.lastPosition.z) * this.smoothFactor;
