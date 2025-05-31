@@ -135,8 +135,8 @@
         emitevents="true"
       >
         <!-- Модель ровно на маркере -->
-        <a-entity id="model-wrapper" position="0 -0.5 0">
-          <a-entity id="model-container" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
+        <a-entity id="model-wrapper" position="0 0 0">
+          <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
 
         <!-- Кнопки с тач-поддержкой -->
@@ -195,66 +195,57 @@
 
       // Копирование ориентации маркера без ограничений
       AFRAME.registerComponent("model-orientation", {
-        init: function() {
-          this.lastValidRotation = new THREE.Euler();
-          this.isInitialized = false;
-          this.rotationLocked = false;
-          this.smoothFactor = 0.1;
-          this.autoRotate = true;
-          this.rotationSpeed = 0.01;
-          this.offsetY = -0.5; // Отрицательное смещение, чтобы опустить модель
-        },
-        tick: function() {
+        tick: function () {
           const marker = document.querySelector("#hiro-marker");
-          if (!marker || !marker.object3D) return;
-
-          // Автоматическое вращение вокруг оси Y
-          if (this.autoRotate) {
-            this.el.object3D.rotation.y += this.rotationSpeed;
+          if (marker && marker.object3D) {
+            this.el.object3D.quaternion.copy(marker.object3D.quaternion);
           }
-
-          // Следим за положением маркера по всем осям
-          const markerPosition = marker.object3D.position;
-          const modelPosition = this.el.object3D.position;
-          
-          // Плавное обновление позиции
-          modelPosition.x = markerPosition.x;
-          modelPosition.y = markerPosition.y + this.offsetY;
-          modelPosition.z = markerPosition.z;
-        }
+        },
       });
 
       // Стабилизация позиции
       AFRAME.registerComponent("model-stabilizer", {
-        init: function() {
+        init: function () {
           this.lastPosition = new THREE.Vector3();
-          this.smoothFactor = 0.05; // Уменьшаем для более точного следования
-          this.isInitialized = false;
+          this.lastRotation = new THREE.Euler();
+          this.smoothFactor = 0.1;
+          this.rotationSmoothFactor = 0.1;
+          this.positionThreshold = 0.01;
+          this.rotationThreshold = 0.01;
         },
-        tick: function() {
-          const obj = this.el.object3D;
+        tick: function () {
+          const pos = this.el.object3D.position;
+          const rot = this.el.object3D.rotation;
           
-          // Инициализация начальных значений
-          if (!this.isInitialized) {
-            this.lastPosition.copy(obj.position);
-            this.isInitialized = true;
-            return;
+          if (Math.abs(pos.x - this.lastPosition.x) > this.positionThreshold) {
+            pos.x = this.lastPosition.x + (pos.x - this.lastPosition.x) * this.smoothFactor;
           }
-
-          // Стабилизация позиции с меньшим сглаживанием
-          obj.position.x = this.lastPosition.x + (obj.position.x - this.lastPosition.x) * this.smoothFactor;
-          obj.position.y = this.lastPosition.y + (obj.position.y - this.lastPosition.y) * this.smoothFactor;
-          obj.position.z = this.lastPosition.z + (obj.position.z - this.lastPosition.z) * this.smoothFactor;
-
-          // Сохраняем текущие значения
-          this.lastPosition.copy(obj.position);
-        }
+          if (Math.abs(pos.y - this.lastPosition.y) > this.positionThreshold) {
+            pos.y = this.lastPosition.y + (pos.y - this.lastPosition.y) * this.smoothFactor;
+          }
+          if (Math.abs(pos.z - this.lastPosition.z) > this.positionThreshold) {
+            pos.z = this.lastPosition.z + (pos.z - this.lastPosition.z) * this.smoothFactor;
+          }
+          
+          if (Math.abs(rot.x - this.lastRotation.x) > this.rotationThreshold) {
+            rot.x = this.lastRotation.x + (rot.x - this.lastRotation.x) * this.rotationSmoothFactor;
+          }
+          if (Math.abs(rot.y - this.lastRotation.y) > this.rotationThreshold) {
+            rot.y = this.lastRotation.y + (rot.y - this.lastRotation.y) * this.rotationSmoothFactor;
+          }
+          if (Math.abs(rot.z - this.lastRotation.z) > this.rotationThreshold) {
+            rot.z = this.lastRotation.z + (rot.z - this.lastRotation.z) * this.rotationSmoothFactor;
+          }
+          
+          this.lastPosition.copy(pos);
+          this.lastRotation.copy(rot);
+        },
       });
 
       // Список моделей и логика переключения
       const models = [
-        { glb: "models/cat.glb", scale: "3 3 3", position: "0 -0.5 0", rotation: "0 0 0", animate: true },
-        { glb: "models/model.glb", scale: "3 3 3", position: "0 -0.5 0", rotation: "0 0 0", animate: true },
+        { glb: "models/cat.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
+        { glb: "models/model.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
       ];
       let currentIndex = 0;
       let currentModel = null;
@@ -274,25 +265,17 @@
       function switchModel(path, initial) {
         if (initial) showLoading();
         if (currentModel) currentModel.remove();
-        
         const cfg = models.find((m) => m.glb === path) || {};
         currentModel = document.createElement("a-entity");
-        
         currentModel.setAttribute("gltf-model", path);
         currentModel.setAttribute("scale", cfg.scale || "1.5 1.5 1.5");
         currentModel.setAttribute("position", cfg.position || "0 0 0");
         currentModel.setAttribute("rotation", cfg.rotation || "0 0 0");
-        
-        // Добавляем компоненты в правильном порядке
-        currentModel.setAttribute("model-stabilizer", "");
+        currentModel.setAttribute("mixin", "spin");
         currentModel.setAttribute("model-orientation", "");
-        
+        currentModel.setAttribute("model-stabilizer", "");
         modelContainer.appendChild(currentModel);
-        
-        currentModel.addEventListener("model-loaded", () => {
-          if (initial) hideLoading();
-        });
-        
+        currentModel.addEventListener("model-loaded", () => { if (initial) hideLoading(); });
         currentModel.addEventListener("model-error", () => {
           if (initial) {
             loadingText.textContent = "Błąd ładowania modelu";
