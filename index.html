@@ -201,7 +201,8 @@
           this.rotationLocked = false;
           this.smoothFactor = 0.1;
           this.autoRotate = true;
-          this.rotationSpeed = 0.01; // Скорость автоматического вращения
+          this.rotationSpeed = 0.01;
+          this.offsetY = 0; // Смещение по Y относительно маркера
         },
         tick: function() {
           const marker = document.querySelector("#hiro-marker");
@@ -212,9 +213,10 @@
             this.el.object3D.rotation.y += this.rotationSpeed;
           }
 
-          // Следим только за положением маркера, но не за его вращением
+          // Следим за положением маркера по всем осям
           const markerPosition = marker.object3D.position;
           this.el.object3D.position.x = markerPosition.x;
+          this.el.object3D.position.y = markerPosition.y + this.offsetY; // Добавляем смещение по Y
           this.el.object3D.position.z = markerPosition.z;
         }
       });
@@ -236,7 +238,7 @@
             return;
           }
 
-          // Стабилизация только позиции
+          // Стабилизация позиции с меньшим сглаживанием
           obj.position.x = this.lastPosition.x + (obj.position.x - this.lastPosition.x) * this.smoothFactor;
           obj.position.y = this.lastPosition.y + (obj.position.y - this.lastPosition.y) * this.smoothFactor;
           obj.position.z = this.lastPosition.z + (obj.position.z - this.lastPosition.z) * this.smoothFactor;
