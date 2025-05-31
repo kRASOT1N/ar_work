@@ -135,8 +135,8 @@
         emitevents="true"
       >
         <!-- Модель ровно на маркере -->
-        <a-entity id="model-wrapper" position="0 0 0">
-          <a-entity id="model-container" rotation="0 0 0" scale="1 1 1"></a-entity>
+        <a-entity id="model-wrapper" position="0 -0.5 0">
+          <a-entity id="model-container" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-entity>
 
         <!-- Кнопки с тач-поддержкой -->
@@ -202,7 +202,7 @@
           this.smoothFactor = 0.1;
           this.autoRotate = true;
           this.rotationSpeed = 0.01;
-          this.offsetY = 0; // Смещение по Y относительно маркера
+          this.offsetY = -0.5; // Отрицательное смещение, чтобы опустить модель
         },
         tick: function() {
           const marker = document.querySelector("#hiro-marker");
@@ -215,9 +215,12 @@
 
           // Следим за положением маркера по всем осям
           const markerPosition = marker.object3D.position;
-          this.el.object3D.position.x = markerPosition.x;
-          this.el.object3D.position.y = markerPosition.y + this.offsetY; // Добавляем смещение по Y
-          this.el.object3D.position.z = markerPosition.z;
+          const modelPosition = this.el.object3D.position;
+          
+          // Плавное обновление позиции
+          modelPosition.x = markerPosition.x;
+          modelPosition.y = markerPosition.y + this.offsetY;
+          modelPosition.z = markerPosition.z;
         }
       });
 
@@ -225,7 +228,7 @@
       AFRAME.registerComponent("model-stabilizer", {
         init: function() {
           this.lastPosition = new THREE.Vector3();
-          this.smoothFactor = 0.1;
+          this.smoothFactor = 0.05; // Уменьшаем для более точного следования
           this.isInitialized = false;
         },
         tick: function() {
@@ -250,8 +253,8 @@
 
       // Список моделей и логика переключения
       const models = [
-        { glb: "models/cat.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0", animate: true },
-        { glb: "models/model.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0", animate: true },
+        { glb: "models/cat.glb", scale: "3 3 3", position: "0 -0.5 0", rotation: "0 0 0", animate: true },
+        { glb: "models/model.glb", scale: "3 3 3", position: "0 -0.5 0", rotation: "0 0 0", animate: true },
       ];
       let currentIndex = 0;
       let currentModel = null;
