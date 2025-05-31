@@ -2,34 +2,25 @@
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-touch-fullscreen" content="yes" />
-    <title>Przeglądarka AR</title>
+    <title>Przeglądarka AR</title>
 
-    <!-- Biblioteki AR.js i A-Frame -->
+    <!-- Biblioteki AR.js i A‑Frame -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
-    <!-- Wyłączanie okien dialogowych AR.js -->
+    <!-- Wyłączanie dialogów AR.js (w iOS – некоторые модальные окна вылетают) -->
     <script>
-      window.addEventListener("load", function () {
+      window.addEventListener("load", () => {
         if (window.ARjs && window.ARjs.Utils) {
-          window.ARjs.Utils.displayResolutionPrompt = function () {};
+          window.ARjs.Utils.displayResolutionPrompt = () => {};
         }
-        window.confirm = function (message) {
-          console.log("Okno potwierdzenia pominięte:", message);
-          return true;
-        };
-        window.prompt = function (message, defaultValue) {
-          console.log("Okno wprowadzania pominięte:", message);
-          return defaultValue;
-        };
+        window.confirm = () => true;
+        window.prompt = (_m, def) => def;
       });
     </script>
 
@@ -43,6 +34,7 @@
         height: 100vh;
         overflow: hidden;
       }
+      /* Ładowanie */
       #loading-screen {
         position: fixed;
         inset: 0;
@@ -52,63 +44,85 @@
         align-items: center;
         justify-content: center;
         z-index: 9999;
-        color: #fff;
       }
-      #loading-screen.hidden { display: none; }
-      #loading-text { margin-top: 20px; font-size: 18px; }
+      #loading-screen.hidden {
+        display: none;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #fff;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      #loading-text {
+        margin-top: 20px;
+        font-size: 18px;
+      }
+      /* Status markera */
       #marker-status {
         position: fixed;
-        top: 20px; left: 50%;
+        top: 20px;
+        left: 50%;
         transform: translateX(-50%);
-        background: rgba(0,0,0,0.7);
+        background: rgba(0, 0, 0, 0.7);
         padding: 10px 20px;
         border-radius: 20px;
         font-size: 16px;
         z-index: 1000;
         display: none;
       }
+      /* Przyciski nawigacji modeli */
       .model-nav-buttons {
         position: fixed;
-        bottom: 20px; left: 50%;
+        bottom: 20px;
+        left: 50%;
         transform: translateX(-50%);
-        display: flex; gap: 30px;
+        display: flex;
+        gap: 30px;
         z-index: 1000;
       }
       .nav-button {
-        width: 60px; height: 60px;
+        width: 60px;
+        height: 60px;
         cursor: pointer;
-        transition: transform .2s;
+        transition: transform 0.2s;
       }
-      .nav-button:hover { transform: scale(1.1); }
-      .nav-button:active { transform: scale(0.95); }
-      .a-enter-vr { display: none !important; }
-      .button {
-        position: absolute;
-        background: rgba(255,255,255,0.2);
-        color: #fff;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background 0.3s;
-        z-index: 1000;
-        width: 80px; height: 32px;
+      .nav-button:hover {
+        transform: scale(1.1);
+      }
+      .nav-button:active {
+        transform: scale(0.95);
+      }
+      /* A‑Frame VR guzik off */
+      .a-enter-vr {
+        display: none !important;
       }
     </style>
   </head>
   <body>
+    <!-- Ekran ładowania -->
     <div id="loading-screen">
       <div class="spinner"></div>
-      <div id="loading-text">Ładowanie modelu...</div>
+      <div id="loading-text">Ładowanie modelu…</div>
     </div>
-    <div id="marker-status">Nakieruj kamerę na marker Hiro</div>
 
+    <!-- Status markera -->
+    <div id="marker-status">Nakieruj kamerę na marker Hiro</div>
+
+    <!-- Przyciski nawigacji -->
     <div class="model-nav-buttons">
-      <img id="btn-left" src="L.png" class="nav-button" alt="Poprzedni model" />
-      <img id="btn-right" src="R.png" class="nav-button" alt="Następny model" />
+      <img id="btn-left" src="L.png" class="nav-button" alt="Poprzedni model" />
+      <img id="btn-right" src="R.png" class="nav-button" alt="Następny model" />
     </div>
 
+    <!-- Scena A‑Frame/AR.js -->
     <a-scene
       embedded
       arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 60; canvasWidth: 1000; canvasHeight: 1000; displayWidth: 1000; displayHeight: 1000; patternRatio: 0.5; minConfidence: 0.3;"
@@ -116,31 +130,27 @@
       vr-mode-ui="enabled: false"
     >
       <a-assets>
-        <a-mixin
-          id="spin"
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"
-        ></a-mixin>
+        <!-- Prosty mixin obrotu modelu -->
+        <a-mixin id="spin" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear"></a-mixin>
       </a-assets>
 
+      <!-- Marker Hiro -->
       <a-marker
         id="hiro-marker"
-        type="pattern"
         preset="hiro"
         smooth="true"
-        smoothCount="10"
+        smoothCount="15"
         smoothTolerance="0.01"
         smoothThreshold="2"
-        minConfidence="0.15"
+        minConfidence="0.25"
         raycaster="objects: .clickable"
         emitevents="true"
       >
-        <!-- Модель ровно на маркере -->
-        <a-entity id="model-wrapper" position="0 0 0">
-          <a-entity id="model-container" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
-        </a-entity>
+        <!-- Kontener na model (odziedzicza matrycę od markera) -->
+        <a-entity id="model-container"></a-entity>
 
-        <!-- Кнопки с тач-поддержкой -->
-        <a-entity position="0 0 0">
+        <!-- Przyciski w AR -->
+        <a-entity>
           <a-plane
             id="website-button"
             position="1.2 0 0"
@@ -149,8 +159,8 @@
             material="src: site.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
-            animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur:100; easing: easeInOutQuad; startEvents: click"
-            animation__clickback="property: scale; from:0.9 0.9 0.9; to:1 1 1; dur:100; easing:easeInOutQuad; startEvents:animationcomplete__click"
+            animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
+            animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
           ></a-plane>
           <a-plane
             id="email-button"
@@ -160,13 +170,13 @@
             material="src: em.png; transparent: true;"
             look-at="[camera]"
             class="clickable"
-            animation__click="property: scale; from:1 1 1; to:0.9 0.9 0.9; dur:100; easing:easeInOutQuad; startEvents:click"
-            animation__clickback="property: scale; from:0.9 0.9 0.9; to:1 1 1; dur:100; easing:easeInOutQuad; startEvents:animationcomplete__click"
+            animation__click="property: scale; from: 1 1 1; to: 0.9 0.9 0.9; dur: 100; easing: easeInOutQuad; startEvents: click"
+            animation__clickback="property: scale; from: 0.9 0.9 0.9; to: 1 1 1; dur: 100; easing: easeInOutQuad; startEvents: animationcomplete__click"
           ></a-plane>
         </a-entity>
       </a-marker>
 
-      <!-- Камера + курсор для клика и тача -->
+      <!-- Kamera + kursor do klików -->
       <a-entity
         camera
         cursor="rayOrigin: mouse; fuse: false"
@@ -177,7 +187,76 @@
     </a-scene>
 
     <script>
-      // Обработчик клика и тача
+      /********************* LOGIKA JS *********************/
+      // Tablica modeli
+      const models = [
+        { glb: "models/cat.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
+        { glb: "models/model.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" }
+      ];
+
+      let currentIndex = 0;
+      let currentModel = null;
+      const modelContainer = document.getElementById("model-container");
+      const loadingScreen = document.getElementById("loading-screen");
+      const loadingText = document.getElementById("loading-text");
+      const markerStatus = document.getElementById("marker-status");
+
+      // Ekran ładowania
+      const showLoading = (msg = "Ładowanie modelu…") => {
+        loadingText.textContent = msg;
+        loadingScreen.classList.remove("hidden");
+      };
+      const hideLoading = () => loadingScreen.classList.add("hidden");
+
+      // Ładowanie i podmiana modelu
+      function switchModel(path, initial = false) {
+        if (initial) showLoading();
+        if (currentModel) currentModel.remove();
+
+        const cfg = models.find(m => m.glb === path) || {};
+        currentModel = document.createElement("a-entity");
+        currentModel.setAttribute("gltf-model", path);
+        currentModel.setAttribute("scale", cfg.scale || "1.5 1.5 1.5");
+        currentModel.setAttribute("position", cfg.position || "0 0 0");
+        currentModel.setAttribute("rotation", cfg.rotation || "0 0 0");
+        currentModel.setAttribute("mixin", "spin");
+        modelContainer.appendChild(currentModel);
+
+        currentModel.addEventListener("model-loaded", () => initial && hideLoading());
+        currentModel.addEventListener("model-error", () => {
+          if (initial) {
+            loadingText.textContent = "Błąd ładowania modelu";
+            setTimeout(hideLoading, 3000);
+          }
+        });
+      }
+
+      // Nawigacja strzałkami
+      const switchToIndex = i => {
+        currentIndex = (i + models.length) % models.length;
+        switchModel(models[currentIndex].glb);
+        const visible = document.getElementById("hiro-marker").object3D.visible;
+        markerStatus.style.display = visible ? "none" : "block";
+      };
+      document.getElementById("btn-left").addEventListener("click", () => switchToIndex(currentIndex - 1));
+      document.getElementById("btn-right").addEventListener("click", () => switchToIndex(currentIndex + 1));
+
+      // Kiedy strona gotowa
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          if (navigator.xr && !(await navigator.xr.isSessionSupported("immersive-ar"))) return;
+          switchModel(models[0].glb, true);
+        } catch (e) {
+          console.error(e);
+        }
+      });
+
+      // Status markera
+      const markerEl = document.getElementById("hiro-marker");
+      markerEl.addEventListener("markerFound", () => (markerStatus.style.display = "none"));
+      markerEl.addEventListener("markerLost", () => (markerStatus.style.display = "block"));
+
+      /********************* INTERAKTYWNE PRZYCISKI *********************/
       AFRAME.registerComponent("clickable", {
         init: function () {
           const el = this.el;
@@ -190,120 +269,8 @@
           };
           el.addEventListener("click", onTap);
           el.addEventListener("touchstart", onTap);
-        },
+        }
       });
-
-      // Копирование ориентации маркера без ограничений
-      AFRAME.registerComponent("model-orientation", {
-        tick: function () {
-          const marker = document.querySelector("#hiro-marker");
-          if (marker && marker.object3D) {
-            this.el.object3D.quaternion.copy(marker.object3D.quaternion);
-          }
-        },
-      });
-
-      // Стабилизация позиции
-      AFRAME.registerComponent("model-stabilizer", {
-        init: function () {
-          this.lastPosition = new THREE.Vector3();
-          this.lastRotation = new THREE.Euler();
-          this.smoothFactor = 0.05;
-          this.rotationSmoothFactor = 0.05;
-          this.positionThreshold = 0.005;
-          this.rotationThreshold = 0.005;
-          this.fixedHeight = 0;
-        },
-        tick: function () {
-          const pos = this.el.object3D.position;
-          const rot = this.el.object3D.rotation;
-          
-          pos.y = this.fixedHeight;
-          
-          if (Math.abs(pos.x - this.lastPosition.x) > this.positionThreshold) {
-            pos.x = this.lastPosition.x + (pos.x - this.lastPosition.x) * this.smoothFactor;
-          }
-          if (Math.abs(pos.z - this.lastPosition.z) > this.positionThreshold) {
-            pos.z = this.lastPosition.z + (pos.z - this.lastPosition.z) * this.smoothFactor;
-          }
-          
-          if (Math.abs(rot.x - this.lastRotation.x) > this.rotationThreshold) {
-            rot.x = this.lastRotation.x + (rot.x - this.lastRotation.x) * this.rotationSmoothFactor;
-          }
-          if (Math.abs(rot.y - this.lastRotation.y) > this.rotationThreshold) {
-            rot.y = this.lastRotation.y + (rot.y - this.lastRotation.y) * this.rotationSmoothFactor;
-          }
-          if (Math.abs(rot.z - this.lastRotation.z) > this.rotationThreshold) {
-            rot.z = this.lastRotation.z + (rot.z - this.lastRotation.z) * this.rotationSmoothFactor;
-          }
-          
-          this.lastPosition.copy(pos);
-          this.lastRotation.copy(rot);
-        },
-      });
-
-      // Список моделей и логика переключения
-      const models = [
-        { glb: "models/cat.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
-        { glb: "models/model.glb", scale: "3 3 3", position: "0 0 0", rotation: "0 0 0" },
-      ];
-      let currentIndex = 0;
-      let currentModel = null;
-      const modelContainer = document.querySelector("#model-container");
-      const loadingScreen = document.getElementById("loading-screen");
-      const loadingText = document.getElementById("loading-text");
-      const markerStatus = document.getElementById("marker-status");
-
-      function showLoading(msg = "Ładowanie modelu...") {
-        loadingText.textContent = msg;
-        loadingScreen.classList.remove("hidden");
-      }
-      function hideLoading() {
-        loadingScreen.classList.add("hidden");
-      }
-
-      function switchModel(path, initial) {
-        if (initial) showLoading();
-        if (currentModel) currentModel.remove();
-        const cfg = models.find((m) => m.glb === path) || {};
-        currentModel = document.createElement("a-entity");
-        currentModel.setAttribute("gltf-model", path);
-        currentModel.setAttribute("scale", cfg.scale || "1.5 1.5 1.5");
-        currentModel.setAttribute("position", cfg.position || "0 0 0");
-        currentModel.setAttribute("rotation", cfg.rotation || "0 0 0");
-        currentModel.setAttribute("mixin", "spin");
-        currentModel.setAttribute("model-orientation", "");
-        currentModel.setAttribute("model-stabilizer", "");
-        modelContainer.appendChild(currentModel);
-        currentModel.addEventListener("model-loaded", () => { if (initial) hideLoading(); });
-        currentModel.addEventListener("model-error", () => {
-          if (initial) {
-            loadingText.textContent = "Błąd ładowania modelu";
-            setTimeout(hideLoading, 3000);
-          }
-        });
-      }
-
-      function switchToIndex(i) {
-        currentIndex = (i + models.length) % models.length;
-        switchModel(models[currentIndex].glb, false);
-        const vis = document.querySelector("#hiro-marker").object3D.visible;
-        markerStatus.style.display = vis ? "none" : "block";
-      }
-
-      document.getElementById("btn-left").addEventListener("click", () => switchToIndex(currentIndex - 1));
-      document.getElementById("btn-right").addEventListener("click", () => switchToIndex(currentIndex + 1));
-
-      document.addEventListener("DOMContentLoaded", async () => {
-        try {
-          if ("xr" in navigator && !(await navigator.xr.isSessionSupported("immersive-ar"))) return;
-          switchModel(models[0].glb, true);
-        } catch (e) { console.error(e); }
-      });
-
-      const markerEl = document.querySelector("#hiro-marker");
-      markerEl.addEventListener("markerFound", () => (markerStatus.style.display = "none"));
-      markerEl.addEventListener("markerLost", () => (markerStatus.style.display = "block"));
     </script>
   </body>
 </html>
